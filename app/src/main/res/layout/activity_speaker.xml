@@ -10,7 +10,7 @@
     tools:context="com.speedata.speakercheck.activity.SpeakerActivity">
 
    <TextView
-       android:text="配置信息"
+       android:text="配置信息：GPIO 93 94;ttyMT1;57600"
        android:layout_width="match_parent"
        android:layout_height="wrap_content" />
 
