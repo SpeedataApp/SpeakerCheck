@@ -73,6 +73,7 @@
     <string name="encryption_switch">加密开关:</string>
     <string name="contact_number">联系人号码:</string>
     <string name="channel">信道:</string>
+    <string name="vol">音量：</string>
     <!-- 白色 -->
 
 </resources>

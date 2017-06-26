@@ -1,16 +1,15 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content" 
     >
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
 <LinearLayout
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical">
-    <LinearLayout 
+    <LinearLayout
+        android:visibility="gone"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:layout_weight="1"
@@ -37,7 +36,8 @@
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/textView1" />
     </LinearLayout>
-<LinearLayout 
+<LinearLayout
+    android:visibility="gone"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:layout_weight="1"
@@ -65,6 +65,7 @@
 
 <!--      几个输入框包括接收发送频率以及接收与发送的亚音频率     -->
     <LinearLayout
+        android:visibility="gone"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="1"
@@ -94,6 +95,7 @@
     </LinearLayout>
 
     <LinearLayout
+        android:visibility="gone"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="1"
@@ -122,7 +124,8 @@
             android:layout_toRightOf="@+id/textView1" />
     </LinearLayout>
     
-<LinearLayout 
+<LinearLayout
+    android:visibility="gone"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:layout_weight="1"
@@ -293,5 +296,4 @@
         android:text="@string/exittofrist" />
   
 </LinearLayout>
-    </ScrollView>
 </RelativeLayout>

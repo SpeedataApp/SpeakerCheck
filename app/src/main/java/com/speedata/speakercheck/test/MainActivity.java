@@ -1,7 +1,6 @@
 package com.speedata.speakercheck.test;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -18,7 +17,6 @@ import android.widget.EditText;
 import android.widget.ToggleButton;
 
 import com.speedata.speakercheck.R;
-import com.speedata.speakercheck.activity.SpeakerActivity;
 import com.speedata.speakercheck.dialogs.DigitSettingsDialog;
 import com.speedata.speakercheck.dialogs.SettingsDialog;
 import com.speedata.speakercheck.utils.Cmds;
@@ -100,6 +98,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnQueryMoni.setOnClickListener(this);
         btnQueryShuzi = (Button) findViewById(R.id.query_shuzi_btn);
         btnQueryShuzi.setOnClickListener(this);
+        //关闭数字设置与查询
+        setShuzi.setEnabled(false);
+        btnQueryShuzi.setEnabled(false);
+
         Button btnOut = (Button) findViewById(R.id.back_btn);
         btnOut.setOnClickListener(this);
         Button btnClean = (Button) findViewById(R.id.clean_window);
@@ -189,8 +191,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.new_speaker:
-                Intent intent = new Intent(MainActivity.this, SpeakerActivity.class);
-                startActivity(intent);
+
+//                Intent intent = new Intent(MainActivity.this, SpeakerActivity.class);
+//                startActivity(intent);
+                //数字信道结束
+//                    cardtemp = cmds.voiceCall("ff", "04ffffff");
+//                    IDDev.WriteSerialByte(IDFd, cardtemp);
+//                        speakerApi.startSpeak(true);
+                //模拟信道结束
+                    cardtemp = cmds.voiceCall("ff", "00000000");
+                    IDDev.WriteSerialByte(IDFd, cardtemp);
+//                        speakerApi.startSpeak(false);
+
                 break;
 
             case R.id.btn_version:
@@ -219,10 +231,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         speakerBtn.setEnabled(true);
         volSub.setEnabled(true);
         volAdd.setEnabled(true);
-        setShuzi.setEnabled(true);
+    //    setShuzi.setEnabled(true);
         setMoni.setEnabled(true);
         btnQueryMoni.setEnabled(true);
-        btnQueryShuzi.setEnabled(true);
+    //    btnQueryShuzi.setEnabled(true);
     }
 
 

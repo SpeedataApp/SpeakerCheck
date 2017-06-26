@@ -5,6 +5,8 @@ import static com.speedata.speakercheck.utils.Parts.CKSUM_BEFORE;
 import static com.speedata.speakercheck.utils.Parts.CMD_0x01;
 import static com.speedata.speakercheck.utils.Parts.CMD_0x02;
 import static com.speedata.speakercheck.utils.Parts.CMD_0x06;
+import static com.speedata.speakercheck.utils.Parts.CMD_0x13;
+import static com.speedata.speakercheck.utils.Parts.CMD_0x14;
 import static com.speedata.speakercheck.utils.Parts.CMD_0x25;
 import static com.speedata.speakercheck.utils.Parts.CMD_0x35;
 import static com.speedata.speakercheck.utils.Parts.CMD_0x36;
@@ -55,7 +57,7 @@ public class Cmds {
 
 //-----------------------------------------------------------------------
 
-    //1.信道切换
+    //信道切换
 
     public byte[] changeChannel(String number) { // DATA：范围1到16，对应16个信道
 
@@ -69,7 +71,7 @@ public class Cmds {
 
     }
 
-    //2.接受音量设置
+    //接受音量设置
     public byte[] volumeSetting(String number) { //DATA:从1到9，默认8
 
         String vs1 = HEAD_0x68 + CMD_0x02 + RW_0x01 + SRS_0x01 + CKSUM_BEFORE + "0001" + number + TAIL_0x10;
@@ -85,7 +87,7 @@ public class Cmds {
 
     //----------------------------收发语音的串口协议包格式 --------------------------------
 
-    //6.开始/停止语音呼叫
+    //开始/停止语音呼叫
     public byte[] voiceCall(String call, String number) { // 0x01：呼叫开始  0xFF：呼叫结束
 
         String vc1 = HEAD_0x68 + CMD_0x06 + RW_0x01 + call + CKSUM_BEFORE + "0004" + number + TAIL_0x10;
@@ -97,8 +99,34 @@ public class Cmds {
         return vcbyte;
     }
 
+    //收发亚音频类型设置
 
-    //25.查询软件版本号
+    public byte[] subAudioType(String number) { //DATA:接收亚音类型+发送亚音类型  1 为载波，2 为 CTCSS，3 为 CDCSS，4 为反向 CDCSS
+
+        String sat1 = HEAD_0x68 + CMD_0x13 + RW_0x01 + SRS_0x01 + CKSUM_BEFORE + "0002" + number + TAIL_0x10;
+
+        String sat = HEAD_0x68 + CMD_0x13 + RW_0x01 + SRS_0x01 + checkSum(sat1) + "0002" + number + TAIL_0x10;
+
+        byte[] satbyte = HexString2Bytes(sat);
+
+        return satbyte;
+
+    }
+
+    //CTCSS/DCS 亚音频率设置
+    public byte[] ctcssDcs(String number) { //DATA:接收亚音频 +发送亚音频  CTCSS 范围为 0~50；CDCSS，反向 CDCSS 范围为 0~82
+
+        String cd1 = HEAD_0x68 + CMD_0x14 + RW_0x01 + SRS_0x01 + CKSUM_BEFORE + "0002" + number + TAIL_0x10;
+
+        String cd = HEAD_0x68 + CMD_0x14 + RW_0x01 + SRS_0x01 + checkSum(cd1) + "0002" + number + TAIL_0x10;
+
+        byte[] cdbyte = HexString2Bytes(cd);
+
+        return cdbyte;
+
+    }
+
+    //查询软件版本号
     public byte[] querySoftwareVersion(String number) { //DATA:0X01
 
         String qsv1 = HEAD_0x68 + CMD_0x25 + RW_0x01 + SRS_0x01 + CKSUM_BEFORE + "0001" + number + TAIL_0x10;
@@ -110,7 +138,7 @@ public class Cmds {
         return qsvbyte;
     }
 
-    //35. 设置模拟组命令
+    //设置模拟组命令
     /*
     第 0 字节为带宽（窄带：0X00 宽带：0X80）
     第 1 字节为功率（低功率：0 高功率：1）
@@ -134,7 +162,7 @@ public class Cmds {
 
     }
 
-    //36. 设置数字组命令
+    // 设置数字组命令
     /*
      第 0 字节为功率（低功率：0 高功率：1）
     第 1-4 字节为接收频率（频率值为小端模式）
@@ -159,7 +187,7 @@ public class Cmds {
 
     }
 
-    //37. 查询模拟组设置命令
+    // 查询模拟组设置命令
     public byte[] queryGroup(String number) {//DATA:0x01
 
         String qg1 = HEAD_0x68 + CMD_0x37 + RW_0x01 + SRS_0x01 + CKSUM_BEFORE + "0001" + number + TAIL_0x10;
@@ -172,7 +200,7 @@ public class Cmds {
 
     }
 
-    //38. 查询数字组设置命令
+    // 查询数字组设置命令
     public byte[] queryGroupSettings(String number) { //DATA:0x01
 
         String qgs1 = HEAD_0x68 + CMD_0x38 + RW_0x01 + SRS_0x01 + CKSUM_BEFORE + "0001" + number + TAIL_0x10;

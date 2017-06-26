@@ -15,20 +15,19 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.speedata.speakercheck.R;
-import com.speedata.speakercheck.test.MainActivity;
+import com.speedata.speakercheck.activity.SpeakerActivity;
 import com.speedata.speakercheck.utils.Cmds;
 
 import static java.lang.Integer.valueOf;
 
-public class SettingsDialog extends Dialog implements
+public class MoniDialog extends Dialog implements
 		View.OnClickListener {
-
-	private final MainActivity mainActivity;
-	Context mContext;
+	private final SpeakerActivity mainActivity;
+	private Context mContext;
 	int fd;
-	Cmds cmds;
+	private Cmds cmds;
 
-	public SettingsDialog(MainActivity mainActivity, Context context) {
+	public MoniDialog(SpeakerActivity mainActivity, Context context) {
 		super(context);
 		this.mainActivity = mainActivity;
 		mContext = context;
@@ -45,32 +44,35 @@ public class SettingsDialog extends Dialog implements
 	}
 
 	private Button goback;
-	Button checkSetting;
-	Button sureSetting;
+	private Button checkSetting;
+	private Button sureSetting;
 
 
-	String[] gongLv;
-	String[] daiKuan;
-	String[] jingZaodengji;
-	String[] jieShouyayin;
-	String[] faSongyayin;
+	private String[] gongLv;
+	private String[] daiKuan;
+	private String[] jingZaodengji;
+	private String[] jieShouyayin;
+	private String[] faSongyayin;
 
-	String gonglv16;
-	String daikuan16;
-	String jingzaodengji16;
-	String jieshouyayin16;
-	String fasongyayin16;
-	String jieshouyayin10;
-	String fasongyayin10;
+	private String gonglv16;
+	private String daikuan16;
+	private String jingzaodengji16;
+	private String jieshouyayin16;
+	private String fasongyayin16;
+	private String jieshouyayin10;
+	private String fasongyayin10;
 
-	EditText et1,et2,et3,et4;
+	private EditText et1;
+	private EditText et2;
+	private EditText et3;
+	private EditText et4;
 
 
 
-	Spinner gonglv_Spinner;
-	Spinner daikuan_Spinner;
-	Spinner jingzaodengji_Spinner;
-	Spinner fasongyayin_Spinner;
+	private Spinner gonglv_Spinner;
+	private Spinner daikuan_Spinner;
+	private Spinner jingzaodengji_Spinner;
+	private Spinner fasongyayin_Spinner;
 	private Spinner jieshouyayin_Spinner;
 
 
@@ -79,11 +81,11 @@ public class SettingsDialog extends Dialog implements
 	private String power_path;
 	int stopbitt;
 
-	ArrayAdapter<String> jieshouyayin_adapter;
-	ArrayAdapter<String> gonglv_adapter;
-	ArrayAdapter<String> daikuan_adapter;
-	ArrayAdapter<String> jingzaodengji_adapter;
-	ArrayAdapter<String> fasongyayin_adapter;
+	private ArrayAdapter<String> jieshouyayin_adapter;
+	private ArrayAdapter<String> gonglv_adapter;
+	private ArrayAdapter<String> daikuan_adapter;
+	private ArrayAdapter<String> jingzaodengji_adapter;
+	private ArrayAdapter<String> fasongyayin_adapter;
 
 	int crc_num = 0;
 	int powercount = 0;
@@ -156,7 +158,7 @@ public class SettingsDialog extends Dialog implements
                                                int position, long id) {
 						arg0.setVisibility(View.VISIBLE);
 
-						String a2 = SettingsDialog.this.daikuan_Spinner
+						String a2 = MoniDialog.this.daikuan_Spinner
 								.getSelectedItem().toString();
 
 						if ("宽带".equals(a2)) {
@@ -233,13 +235,12 @@ public class SettingsDialog extends Dialog implements
 						arg0.setVisibility(View.VISIBLE);
 
 						int select = jingzaodengji_Spinner.getSelectedItemPosition();
-						jingzaodengji16 = "0"+select;
+						jingzaodengji16 = "0" + select;
 
 					}
 
 					@Override
 					public void onNothingSelected(AdapterView<?> arg0) {
-
 
 					}
 
@@ -314,7 +315,7 @@ public class SettingsDialog extends Dialog implements
 		if (v == goback) {
 			dismiss();
 
-		} else if (v == checkSetting) {//检查设置项是否有问题
+		} else if (v == checkSetting) { //检查设置项是否有问题
 			String jieshou = et1.getText().toString();
 			String fasong = et2.getText().toString();
 			String jieshouyayin = et3.getText().toString();
@@ -402,7 +403,6 @@ public class SettingsDialog extends Dialog implements
 
 			cardtemp = cmds.setSimulationGroupCommand(all);
 			mainActivity.IDDev.WriteSerialByte(mainActivity.IDFd, cardtemp);
-
 
 		}
 

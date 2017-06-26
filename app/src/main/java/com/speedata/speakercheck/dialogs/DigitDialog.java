@@ -15,21 +15,20 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.speedata.speakercheck.R;
-import com.speedata.speakercheck.test.MainActivity;
+import com.speedata.speakercheck.activity.SpeakerActivity;
 import com.speedata.speakercheck.utils.Cmds;
 
-import static com.speedata.speakercheck.utils.DataConversionUtils.byteArrayToString;
 import static java.lang.Integer.valueOf;
 
-public class DigitSettingsDialog extends Dialog implements
+public class DigitDialog extends Dialog implements
         View.OnClickListener {
 
-    private final MainActivity mainActivity;
+    private final SpeakerActivity mainActivity;
     private Context mContext;
-    int fd;
+
     private Cmds cmds;
 
-    public DigitSettingsDialog(MainActivity mainActivity, Context context) {
+    public DigitDialog(SpeakerActivity mainActivity, Context context) {
         super(context);
         this.mainActivity = mainActivity;
         mContext = context;
@@ -48,7 +47,6 @@ public class DigitSettingsDialog extends Dialog implements
     private Button checkSetting;
     private Button sureSetting;
 
-
     private String[] gongLv;
     private String[] seMa;
     private String[] lianXirenleixing;
@@ -60,7 +58,8 @@ public class DigitSettingsDialog extends Dialog implements
     private String lianXirenleixing16;
     private String jiaMikaiguan16;
     private String lianXirenleixing10;
-    String jiaMikaiguan10;
+    public String channel;
+    private String channelLast;
 
     private EditText et1;
     private EditText et2;
@@ -69,28 +68,11 @@ public class DigitSettingsDialog extends Dialog implements
     private EditText et5;
     private EditText et6;
 
+    private Spinner gonglvSpinner;
+    private Spinner lianXirenleixingSpinner;
+    private Spinner jiaMikaiguanSpinner;
+    private Spinner seMaSpinner;
 
-    private Spinner gonglv_Spinner;
-
-    private Spinner seMa_Spinner;
-    private Spinner jiaMikaiguan_Spinner;
-    private Spinner lianXirenleixing_Spinner;
-
-
-    int baudrate = 0;
-    String serial_path = "";
-    private String power_path;
-    int stopbitt;
-
-    private ArrayAdapter<String> lianXirenleixing_adapter;
-    private ArrayAdapter<String> gonglv_adapter;
-
-    private ArrayAdapter<String> seMa_adapter;
-    private ArrayAdapter<String> jiaMikaiguan_adapter;
-
-    int crc_num = 0;
-    int powercount = 0;
-    int serial = 0;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,26 +85,27 @@ public class DigitSettingsDialog extends Dialog implements
 
         sureSetting = (Button) this.findViewById(R.id.sure_setting);
 
-        gonglv_Spinner = (Spinner) this.findViewById(R.id.spinner2);
+        gonglvSpinner = (Spinner) this.findViewById(R.id.spinner2);
 
-        lianXirenleixing_Spinner = (Spinner) this.findViewById(R.id.spinner4);
-        seMa_Spinner = (Spinner) this.findViewById(R.id.spinner3);
-        jiaMikaiguan_Spinner = (Spinner) this.findViewById(R.id.spinner5);
+        lianXirenleixingSpinner = (Spinner) this.findViewById(R.id.spinner4);
+        seMaSpinner = (Spinner) this.findViewById(R.id.spinner3);
+        jiaMikaiguanSpinner = (Spinner) this.findViewById(R.id.spinner5);
 
         goback.setOnClickListener(this);
         checkSetting.setOnClickListener(this);
         sureSetting.setOnClickListener(this);
 
-
         initView();
+        channelLast = "00";
+        channel = mainActivity.channelRemember;
 
 
-        gonglv_adapter = new ArrayAdapter<String>(mainActivity,
+        ArrayAdapter<String> gonglvAdapter = new ArrayAdapter<String>(mainActivity,
                 android.R.layout.simple_spinner_item, gongLv);
-        gonglv_adapter
+        gonglvAdapter
                 .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        gonglv_Spinner.setAdapter(gonglv_adapter);
-        gonglv_Spinner
+        gonglvSpinner.setAdapter(gonglvAdapter);
+        gonglvSpinner
                 .setOnItemSelectedListener(new Spinner.OnItemSelectedListener() {
 
                     @Override
@@ -130,14 +113,13 @@ public class DigitSettingsDialog extends Dialog implements
                                                int position, long id) {
                         arg0.setVisibility(View.VISIBLE);
 
-                        String a1 = gonglv_Spinner
+                        String a1 = gonglvSpinner
                                 .getSelectedItem().toString();
                         if ("高功率".equals(a1)) {
                             gonglv16 = "01";
                         } else {
                             gonglv16 = "00";
                         }
-
 
                     }
 
@@ -149,12 +131,12 @@ public class DigitSettingsDialog extends Dialog implements
                 });
 
 
-        lianXirenleixing_adapter = new ArrayAdapter<String>(mainActivity,
+        ArrayAdapter<String> lianXirenleixingAdapter = new ArrayAdapter<String>(mainActivity,
                 android.R.layout.simple_spinner_item, lianXirenleixing);
-        lianXirenleixing_adapter
+        lianXirenleixingAdapter
                 .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        lianXirenleixing_Spinner.setAdapter(lianXirenleixing_adapter);
-        lianXirenleixing_Spinner
+        lianXirenleixingSpinner.setAdapter(lianXirenleixingAdapter);
+        lianXirenleixingSpinner
                 .setOnItemSelectedListener(new Spinner.OnItemSelectedListener() {
 
                     @Override
@@ -179,25 +161,21 @@ public class DigitSettingsDialog extends Dialog implements
                             lianXirenleixing16 = "04";
                             lianXirenleixing10 = "4";
                         }
-
-
-
                     }
 
                     @Override
                     public void onNothingSelected(AdapterView<?> arg0) {
 
-
                     }
 
                 });
-        seMa_adapter = new ArrayAdapter<String>(mainActivity,
+        ArrayAdapter<String> seMaAdapter = new ArrayAdapter<String>(mainActivity,
                 android.R.layout.simple_spinner_item, seMa);
         // Log.w(TAG,"WARN");
-        seMa_adapter
+        seMaAdapter
                 .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        seMa_Spinner.setAdapter(seMa_adapter);
-        seMa_Spinner
+        seMaSpinner.setAdapter(seMaAdapter);
+        seMaSpinner
                 .setOnItemSelectedListener(new Spinner.OnItemSelectedListener() {
 
                     @Override
@@ -205,7 +183,7 @@ public class DigitSettingsDialog extends Dialog implements
                                                int position, long id) {
                         arg0.setVisibility(View.VISIBLE);
 
-                        int select = seMa_Spinner.getSelectedItemPosition();
+                        int select = seMaSpinner.getSelectedItemPosition();
                         if (select < 10) {
                             seMa16 = "0" + select;
                         } else if (select > 9) {
@@ -217,17 +195,16 @@ public class DigitSettingsDialog extends Dialog implements
                     @Override
                     public void onNothingSelected(AdapterView<?> arg0) {
 
-
                     }
 
                 });
-        jiaMikaiguan_adapter = new ArrayAdapter<String>(mainActivity,
+        ArrayAdapter<String> jiaMikaiguanAdapter = new ArrayAdapter<String>(mainActivity,
                 android.R.layout.simple_spinner_item, jiaMikaiguan);
         // Log.w(TAG,"WARN");
-        jiaMikaiguan_adapter
+        jiaMikaiguanAdapter
                 .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        jiaMikaiguan_Spinner.setAdapter(jiaMikaiguan_adapter);
-        jiaMikaiguan_Spinner
+        jiaMikaiguanSpinner.setAdapter(jiaMikaiguanAdapter);
+        jiaMikaiguanSpinner
                 .setOnItemSelectedListener(new Spinner.OnItemSelectedListener() {
                     @Override
                     public void onItemSelected(AdapterView<?> arg0, View arg1,
@@ -242,7 +219,6 @@ public class DigitSettingsDialog extends Dialog implements
 
                         }
 
-
                     }
 
                     @Override
@@ -252,10 +228,14 @@ public class DigitSettingsDialog extends Dialog implements
 
                 });
 
-        gonglv_Spinner.setSelection(1);
-        seMa_Spinner.setSelection(1);
-        lianXirenleixing_Spinner.setSelection(1);
-        jiaMikaiguan_Spinner.setSelection(1);
+        gonglvSpinner.setSelection(0);
+        seMaSpinner.setSelection(1);
+        lianXirenleixingSpinner.setSelection(1);
+        jiaMikaiguanSpinner.setSelection(1);
+
+        if (!channel.equals(channelLast)) {
+            setView(channel);
+        }
 
     }
 
@@ -295,18 +275,13 @@ public class DigitSettingsDialog extends Dialog implements
         et1.setText("420000000");
         et2.setText("420000000");
         et3.setText("888");
-        et4.setText("3");
+        et4.setText("1");
         et5.setText("8");
         et6.setText("1");
 
     }
 
 
-    // DeviceControl DevCtrl2;
-
-    String power_off_write = "";
-    String power_on_write = "";
-    String actual_path = "";
 
     @Override
     public void onClick(View v) {
@@ -393,7 +368,6 @@ public class DigitSettingsDialog extends Dialog implements
 
             cardtemp = cmds.setNumberGroupCommand(all);
             mainActivity.IDDev.WriteSerialByte(mainActivity.IDFd, cardtemp);
-            mainActivity.mingling = (byteArrayToString(cardtemp));
 
         }
 
@@ -419,7 +393,7 @@ public class DigitSettingsDialog extends Dialog implements
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // TODO Auto-generated method stub
+
         switch (keyCode) {
             case KeyEvent.KEYCODE_DPAD_LEFT:
                 sendBroadcastKey("down");
@@ -444,6 +418,38 @@ public class DigitSettingsDialog extends Dialog implements
         toast.show();
     }
 
+    private void setView(String ch) {
+        channelLast = ch;
+        switch (ch) {
+            case "01":
 
+                et1.setText("433375000");
+                et2.setText("433375000");
+
+                break;
+            case "02":
+
+                et1.setText("437225000");
+                et2.setText("437225000");
+                break;
+            case "03":
+
+                et1.setText("431375000");
+                et2.setText("431375000");
+                break;
+            case "04":
+
+                et1.setText("436255000");
+                et2.setText("436255000");
+                break;
+            case "05":
+
+                et1.setText("439975000");
+                et2.setText("439975000");
+                break;
+
+        }
+
+    }
 
 }

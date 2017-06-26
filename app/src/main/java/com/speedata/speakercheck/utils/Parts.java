@@ -14,6 +14,8 @@ public class Parts {
     public static final String CMD_0x01 = "01"; //信道切换 
     public static final String CMD_0x02 = "02"; //接收音量设置 
     public static final String CMD_0x06 = "06"; //各种呼叫模式（呼叫类别）
+    public static final String CMD_0x13 = "13"; //收发亚音频类型设置
+    public static final String CMD_0x14 = "14"; //CTCSS/DCS 亚音设置
     public static final String CMD_0x25 = "25"; //发送软件版本号
     public static final String CMD_0x35 = "35"; //设置模拟组命令
     public static final String CMD_0x36 = "36"; //设置数字组命令
@@ -46,7 +48,7 @@ public class Parts {
     0x02 无此信道或信道错误（注2）
     0x07 模块被毙
     0x09 校验错误
-    备注：短信、语音模型见下面相应章节的详细说明
+
      */
     public static final String SR_0x00 = "00"; //设置成功
     public static final String SR_0x01 = "01"; //模块繁忙或者设置失败（注1）

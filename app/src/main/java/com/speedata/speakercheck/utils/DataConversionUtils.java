@@ -226,8 +226,8 @@ public class DataConversionUtils {
 	//例如输入0x00,0x84,0x00,0x00,0x08
 	//输出完整byte[]指令
 	public static byte[] execCmd(byte[] bysshortCmd){
-		 String cmd=DataConversionUtils.byteArrayToString(bysshortCmd);
-		 byte[] bysRealCmd=DataConversionUtils.packageCommand(cmd);
+		 String cmd= DataConversionUtils.byteArrayToString(bysshortCmd);
+		 byte[] bysRealCmd= DataConversionUtils.packageCommand(cmd);
 		 return bysRealCmd;
 	}
 	
