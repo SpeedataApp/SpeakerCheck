@@ -22,17 +22,17 @@ public class DeviceControl {
 	//		}else if(android.os.Build.MODEL.equalsIgnoreCase("kt80")) {
 	//			CtrlFile.write("-wdout94 1");//80
 	//		} else {
-				CtrlFile.write("-wdout94 1");//临时版本
+				CtrlFile.write("-wdout93 1");//临时版本
             CtrlFile.flush();
-				CtrlFile.write("-wdout65 1");//临时版本
+				CtrlFile.write("-wdout67 1");//临时版本
             CtrlFile.flush();
 	//		}
 		}
 		else if (android.os.Build.VERSION.RELEASE.equals("4.4.2"))
-			CtrlFile.write("-wdout65 1");//临时版本
+			CtrlFile.write("-wdout67 1");//临时版本
 		CtrlFile.flush();
 	//		CtrlFile.write("-wdout106 1");
-			CtrlFile.write("-wdout94 1");
+			CtrlFile.write("-wdout93 1");
 		CtrlFile.flush();
 	}
 	
@@ -44,16 +44,16 @@ public class DeviceControl {
 	//		}else if(android.os.Build.MODEL.equalsIgnoreCase("kt80")) {
 	//			CtrlFile.write("-wdout94 0");//80
 	//		}else {
-				CtrlFile.write("-wdout94 0");//临时版本
+				CtrlFile.write("-wdout93 0");//临时版本
             CtrlFile.flush();
-				CtrlFile.write("-wdout65 0");//临时版本
+				CtrlFile.write("-wdout67 0");//临时版本
             CtrlFile.flush();
 	//		}
 		}
 		else if (android.os.Build.VERSION.RELEASE.equals("4.4.2"))
-			CtrlFile.write("-wdout65 0");//临时版本
+			CtrlFile.write("-wdout67 0");//临时版本
 		CtrlFile.flush();
-			CtrlFile.write("-wdout94 0");
+			CtrlFile.write("-wdout93 0");
 	//		CtrlFile.write("-wdout106 0");
   		CtrlFile.flush();
 	}
