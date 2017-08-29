@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.speedata.speakercheck">
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission
+        android:name="android.permission.DEVICE_POWER"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:allowBackup="true"
@@ -17,6 +22,20 @@
             </intent-filter>
         </activity>
         <activity android:name=".test.MainActivity"></activity>
+
+        <service android:name=".services.SpeakerService" />
+
+        <receiver
+            android:name=".ScanBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.geomobile.se4500barcode" />
+                <action android:name="com.geomobile.se4500barcodestop" />
+
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

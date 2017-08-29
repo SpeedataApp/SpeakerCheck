@@ -1,16 +1,26 @@
 package com.speedata.speakercheck.activity;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
 import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -31,7 +41,6 @@ import android.widget.ToggleButton;
 import com.speedata.speakercheck.R;
 import com.speedata.speakercheck.dialogs.DigitDialog;
 import com.speedata.speakercheck.dialogs.MoniDialog;
-import com.speedata.speakercheck.dialogs.YayinDialog;
 import com.speedata.speakercheck.utils.Cmds;
 import com.speedata.speakercheck.utils.SpeakerApi;
 
@@ -68,29 +77,115 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
      */
     private AlertDialog mExitDialog;
 
-    //亚音
-    private YayinDialog setYayin;
     private Button btnYayin;
-    private boolean use = false;
+    public boolean use = false;
     //先监听音量键-的按下与抬起动作
     //之后要改为侧键监听
     private DigitDialog setDigit;
     private MoniDialog setMoni;
     private int cishu = 1;
 
-    private Button btnCejian;
+    //侧键以及实体按键的按压广播
+    public static final String START_SCAN_ACTION_F5 = "keycode.f5.down";
+    public static final String STOP_SCAN_ACTION_F5 = "keycode.f5.up";
+    public static final String START_SCAN_ACTION_F4 = "keycode.f4.down";
+    public static final String STOP_SCAN_ACTION_F4 = "keycode.f4.up";
+    public static final String LONGPRESSED_F4 = "keycode.f4.longpressed";
+    public static final String LONGPRESSED_F5 = "keycode.f5.longpressed";
+
+
+    //通知
+    int ID = 0x123;
+    NotificationManager mNotificationManager;
+    private Context context;
+    //mic增益
+    public String micGain = "12"; //记录数字信道的mic增益值，默认为12
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //去除标题栏
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        context = SpeakerActivity.this;
         setContentView(R.layout.activity_speaker);
         initTitle();
         speakerApi = new SpeakerApi(); //对讲机api
         initView();
         init(); //初始化并起线程
+        acquireWakeLock();
+        intentFilter();
+        initNot(); //常驻通知栏
+
     }
+
+    private void initNot() {
+        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
+        mBuilder.setContentTitle("对讲机")//设置通知栏标题
+                .setContentText("点击打开对讲机界面") //设置通知栏显示内容
+                .setContentIntent(getDefalutIntent(Notification.FLAG_NO_CLEAR)) //设置通知栏点击意图
+//  .setNumber(number) //设置通知集合的数量
+                .setTicker("进入对讲机应用") //通知首次出现在通知栏，带上升动画效果的
+                .setWhen(System.currentTimeMillis())//通知产生的时间，会在通知信息里显示，一般是系统获取到的时间
+                .setPriority(Notification.PRIORITY_DEFAULT) //设置该通知优先级
+//  .setAutoCancel(true)//设置这个标志当用户单击面板就可以让通知将自动取消
+                .setOngoing(false)//ture，设置他为一个正在进行的通知。他们通常是用来表示一个后台任务,用户积极参与(如播放音乐)或以某种方式正在等待,因此占用设备(如一个文件下载,同步操作,主动网络连接)
+                .setDefaults(Notification.DEFAULT_VIBRATE)//向通知添加声音、闪灯和振动效果的最简单、最一致的方式是使用当前的用户默认设置，使用defaults属性，可以组合
+                //Notification.DEFAULT_ALL  Notification.DEFAULT_SOUND 添加声音 // requires VIBRATE permission
+                .setSmallIcon(R.drawable.ic_launcher); //设置通知小ICON
+
+        Notification notification = mBuilder.build();
+        notification.flags = Notification.FLAG_NO_CLEAR;
+        mNotificationManager.notify(ID, notification);
+
+    }
+
+    private PendingIntent getDefalutIntent(int flags) {
+        Intent mIntent = new Intent(Intent.ACTION_MAIN);
+        mIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        mIntent.setComponent(new ComponentName(context.getPackageName(), SpeakerActivity.class.getCanonicalName()));
+        mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 1, mIntent, flags);
+        return pendingIntent;
+
+    }
+
+    private void intentFilter() {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(START_SCAN_ACTION_F4);
+        filter.addAction(STOP_SCAN_ACTION_F4);
+        filter.addAction(START_SCAN_ACTION_F5);
+        filter.addAction(STOP_SCAN_ACTION_F5);
+        filter.addAction(LONGPRESSED_F4);
+        filter.addAction(LONGPRESSED_F5);
+
+        registerReceiver(receiver, filter);
+    }
+
+    PowerManager.WakeLock wakeLock = null;
+    //获取电源锁，保持该服务在屏幕熄灭时仍然获取CPU时，保持运行
+    private void acquireWakeLock() {
+        if (null == wakeLock) {
+            PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "PostLocationService");
+            if (null != wakeLock) {
+                wakeLock.acquire();
+            }
+        }
+    }
+
+    //释放设备电源锁
+    private void releaseWakeLock() {
+        if (null != wakeLock) {
+            wakeLock.release();
+            wakeLock = null;
+        }
+    }
+
+
     //界面标题栏优化美化
     private void initTitle() {
         activity = this;
@@ -124,7 +219,7 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         try   {
             Thread.currentThread();
             Thread.sleep(30);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ignored) {
         }
         try {
             DevCtrl = new DeviceControl("/sys/class/misc/mtgpio/pin");
@@ -137,7 +232,7 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         try {
             Thread.currentThread();
             Thread.sleep(30);
-        } catch (InterruptedException   e) {
+        } catch (InterruptedException ignored) {
         }
 //            speakerApi.openSerialPort();
         reader = new ReadThread();
@@ -153,8 +248,9 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                         byte[] cardtemp = null;
                         //上电后,模块返回的串口反馈包
                         if ("44c6b5b5c0313b0d0a".equals(byteArrayToString(buf))) {
-                            if ("01".equals(channelRemember) || "02".equals(channelRemember) || "03".equals(channelRemember)
-                                    || "04".equals(channelRemember) || "05".equals(channelRemember)) {
+
+                            if ("01".equals(channelRemember) || "02".equals(channelRemember) || "03".equals(channelRemember) || "04".equals(channelRemember)
+                                    || "05".equals(channelRemember) || "06".equals(channelRemember) || "07".equals(channelRemember) || "08".equals(channelRemember)) {
                                 cpsChannel(channelRemember);
                             } else {
                                 cardtemp = cmds.changeChannel(channelRemember);
@@ -173,9 +269,9 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
 
     //处理对讲模块反馈的信息
     private void messageManage(byte[] buf) {
-        byte[] cardtemp = null;
         int voice = 0;
         switch (btoi(buf[1])) {
+
             case 0x06://语音呼叫，根据流程来设置反馈
                if (btoi(buf[2]) == 0x02) {
                    voice = order7631(btoi(buf[3]));
@@ -188,16 +284,24 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                     animation.setOneShot(true);
                 }
                 break;
+
             case 0x01:
-                Toast.makeText(this, basicOrder(btoi(buf[3])), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "信道切换：" + basicOrder(btoi(buf[3])), Toast.LENGTH_SHORT).show();
                 break;
 
             case 0x35:
-                Toast.makeText(this, basicOrder(btoi(buf[3])), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "模拟信道：" + basicOrder(btoi(buf[3])), Toast.LENGTH_SHORT).show();
                 break;
 
             case 0x36:
-                Toast.makeText(this, basicOrder(btoi(buf[3])), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "数字信道：" + basicOrder(btoi(buf[3])), Toast.LENGTH_SHORT).show();
+                break;
+
+            case 0x0b:
+                Toast.makeText(this, "MIC 增益：" + basicOrder(btoi(buf[3])), Toast.LENGTH_SHORT).show();
+                break;
+
+            default:
                 break;
 
         }
@@ -214,6 +318,8 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
             case 0x60: //"语音接收开始"
                 Toast.makeText(this, "语音接收开始", Toast.LENGTH_SHORT).show();
                 return 1;
+            default:
+                break;
         }
         return 0;
     }
@@ -235,10 +341,8 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
 
         btnYayin = (Button) findViewById(R.id.btn_yayin);
         btnYayin.setOnClickListener(this);
-        setYayin = new YayinDialog(this, this);
         setDigit = new DigitDialog(this, this);
         setMoni = new MoniDialog(this, this);
-
 
         ToggleButton powerBtn = (ToggleButton) findViewById(R.id.toggleButton_power);
         powerBtn.setOnCheckedChangeListener(this);
@@ -252,13 +356,11 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         //是否仅仅启动一次？
         animation.setOneShot(false);
 
-
         ButtonListener b = new ButtonListener();
         btnSpeaker = (Button) findViewById(R.id.btn_speaker_1);
         btnSpeaker.setOnClickListener(b);
         btnSpeaker.setOnTouchListener(b);
         btnSpeaker.setBackgroundResource(R.drawable.speakeroff);
-
 
         buttonUseless();
 
@@ -288,22 +390,15 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                         int select = channelSpinner.getSelectedItemPosition();
                         channelNumber = select;
 
-//                        if (channelNumber >= 8 && use) {
-//                            btnYayin.setEnabled(true);
-//                        } else {
-//                            btnYayin.setEnabled(false);
-//                        }
-
                         channel16 = getchannel(select);
 
-                        if ("01".equals(channel16) || "02".equals(channel16) || "03".equals(channel16)
-                                || "04".equals(channel16) || "05".equals(channel16)) {
+                        if ("01".equals(channel16) || "02".equals(channel16) || "03".equals(channel16) || "04".equals(channel16)
+                                || "05".equals(channel16) || "06".equals(channel16) || "07".equals(channel16) || "08".equals(channel16)) {
                             cpsChannel(channel16);
                         } else {
                             cardtemp = cmds.changeChannel(channel16);
                             IDDev.WriteSerialByte(IDFd, cardtemp);
                         }
-
 //                      channelRemember = speakerApi.changeChannels(channelNumber);
                     }
                     @Override
@@ -391,13 +486,15 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                 channelRemember = "10";
                 return "10";
 
+            default:
+                break;
+
         }
         return "01";
     }
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        byte[] cardtemp = null;
         switch (buttonView.getId()) {
             case R.id.toggleButton_power:
                 if (isChecked) { //开启
@@ -410,7 +507,7 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                         try {
                             Thread.currentThread();
                             Thread.sleep(100);
-                        } catch (InterruptedException e) {
+                        } catch (InterruptedException ignored) {
                         }
                     } catch (IOException e) {
                         Log.e(TAG, "open power error");
@@ -424,11 +521,13 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                     Log.i(TAG, "powerBtn is called off");
                     try {
                         DevCtrl.PowerOffDevice();
-                    } catch (IOException e) {
+                    } catch (IOException ignored) {
 
                     }
 //                    speakerApi.power(false);
                 }
+                break;
+            default:
                 break;
         }
     }
@@ -448,23 +547,20 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                     byte[] cardtemp = null;
                     //上电后,模块返回的串口反馈包
                     if ("44c6b5b5c0313b0d0a".equals(byteArrayToString(buf))) {
-                        if ("01".equals(channelRemember) || "02".equals(channelRemember) || "03".equals(channelRemember)
-                                || "04".equals(channelRemember) || "05".equals(channelRemember)) {
+                        if ("01".equals(channelRemember) || "02".equals(channelRemember) || "03".equals(channelRemember) || "04".equals(channelRemember)
+                                || "05".equals(channelRemember) || "06".equals(channelRemember) || "07".equals(channelRemember) || "08".equals(channelRemember)) {
                             cpsChannel(channelRemember);
                         } else {
                             cardtemp = cmds.changeChannel(channelRemember);
                             IDDev.WriteSerialByte(IDFd, cardtemp);
                         }
-
 //                          speakerApi.initChannels(channelRemember);
                     } else if ((btoi(buf[0]) == 0x68) && (btoi(buf[buf.length - 1]) == 0x10)) {
                         messageManage(buf);
-
                     }
                 }
             }
         };
-
     }
 
     @Override
@@ -513,6 +609,9 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                 }
 
                 break;
+
+            default:
+                break;
         }
     }
 
@@ -535,10 +634,13 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
     public void onDestroy() {
 
         super.onDestroy();
+        unregisterReceiver(receiver);
+        mNotificationManager.cancel(ID);
         Log.i(TAG, "onDestory is called");
         closePort();
+        releaseWakeLock();
     }
-    private void closePort(){ //关闭下电
+    private void closePort() { //关闭下电
         if (IDDev != null) {
             Log.i(TAG, "close serial port");
             IDDev.CloseSerial(IDFd);
@@ -554,7 +656,6 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
             }
         }
 //        speakerApi.closePorts();
-
         if (reader != null) {
             reader.interrupt();
         }
@@ -564,7 +665,7 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         public void run() {
             super.run();
             Log.d(TAG, "thread start");
-            while(!isInterrupted()) {
+            while (!isInterrupted()) {
                 Message msg = new Message();
                 //Log.d(TAG, "thread start Message");
                 byte[] buf;
@@ -599,12 +700,10 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         //语音按钮的监听控制
         public boolean onTouch(View v, MotionEvent event) { //获取按钮状态,监听按下与抬起的动作
             if (v.getId() == R.id.btn_speaker_1) {
-                if (event.getAction() == MotionEvent.ACTION_UP){ //结束发送
+                if (event.getAction() == MotionEvent.ACTION_UP) { //结束发送
                     Log.d("test", "cansal button ---> cancel");
                     btnSpeaker.setBackgroundResource(R.drawable.speakeroff);
-
                     animation.setOneShot(true);
-
                     if (channelNumber < 8) { //数字信道语音发送结束
                         cardtemp = cmds.voiceCall("ff", "04ffffff");
                         IDDev.WriteSerialByte(IDFd, cardtemp);
@@ -639,17 +738,14 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
     //侧键按键抬起监听，结束语音发送
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        byte[] cardtemp = null;
+        Log.d("test", "cansal button ---> up" + keyCode);
 
-        if (keyCode == KeyEvent.KEYCODE_F5) {
-            btnSpeaker.dispatchTouchEvent(MotionEvent.obtain(0, 0, MotionEvent.ACTION_UP, 350, 350, 0));
-
-
+//        byte[] cardtemp = null;
+//        if (keyCode == KeyEvent.KEYCODE_F5) {
+////            btnSpeaker.dispatchTouchEvent(MotionEvent.obtain(0, 0, MotionEvent.ACTION_UP, 350, 350, 0));
 //            Log.d("test", "cansal button ---> cancel");
 //            btnSpeaker.setBackgroundResource(R.drawable.speakeroff);
-//
 //            animation.setOneShot(true);
-//
 //            if (channelNumber < 8) { //数字信道语音发送结束
 //                cardtemp = cmds.voiceCall("ff", "04ffffff");
 //                IDDev.WriteSerialByte(IDFd, cardtemp);
@@ -659,16 +755,22 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
 //                IDDev.WriteSerialByte(IDFd, cardtemp);
 ////                        speakerApi.startSpeak(false);
 //            }
-            return true;
-        }
+//            return true;
+//        }
 
         return super.onKeyUp(keyCode, event);
     }
 
+    @Override
+    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
+        Log.d("test1", "cansal button ---> press" + keyCode);
+        return super.onKeyLongPress(keyCode, event);
+    }
 
-//侧键按键按压监听，开始语音发送
+    //侧键按键按压监听，开始语音发送
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        Log.d("test", "cansal button ---> down" + keyCode);
         byte[] cardtemp = null;
         // 判断是否按下“BACK”(返回)键
         if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -676,12 +778,11 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
             mExitDialog.show();
             // 返回true以表示消费事件，避免按默认的方式处理“BACK”键的事件
             return true;
-        } else if (keyCode == KeyEvent.KEYCODE_F5) {
-            if (!use) {
-                return true;
-            }
-            btnSpeaker.dispatchTouchEvent(MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 350, 350, 0));
-
+//        } else if (keyCode == KeyEvent.KEYCODE_F5) {
+//            if (!use) {
+//                return true;
+//            }
+//            //btnSpeaker.dispatchTouchEvent(MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 350, 350, 0));
 //                Log.d("test", "cansal button ---> down");
 //                btnSpeaker.setBackgroundResource(R.drawable.speakeron);
 //                animation.stop();
@@ -696,11 +797,7 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
 //                    IDDev.WriteSerialByte(IDFd, cardtemp);
 ////                        speakerApi.finishSpeak(false);
 //                }
-            return true;
-        } else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-            Toast.makeText(this, "点击了音量+按钮", Toast.LENGTH_SHORT).show();
-        } else if (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) {
-            Toast.makeText(this, "音量按钮", Toast.LENGTH_SHORT).show();
+//            return true;
         }
         return super.onKeyDown(keyCode, event);
     }
@@ -725,6 +822,9 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                     closePort();
                     finish();
                     break;
+
+                default:
+                    break;
             }
         }
     }
@@ -746,6 +846,9 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
 
             case 0x09:
                 return "校验错误";
+
+            default:
+                break;
 
         }
         return "未知错误";
@@ -770,13 +873,24 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
             case "05":
                 setChannel("439975000", "439975000", "888", "1", "8", "1");
                 break;
+            case "06":
+                setChannel("400000000", "400000000", "888", "1", "8", "1");
+                break;
+            case "07":
+                setChannel("435000000", "435000000", "888", "1", "8", "1");
+                break;
+            case "08":
+                setChannel("470000000", "470000000", "888", "1", "8", "1");
+                break;
+            default:
+                break;
         }
 
     }
 
 
     private void setChannel(String et1, String et2, String et3, String et4, String et5, String et6) {
-        byte[] cardtemp = null;
+        byte[] cardtemp;
         String jieshou = et1;
         String fasong = et2;
         String benjiid = et3;
@@ -832,11 +946,12 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         IDDev.WriteSerialByte(IDFd, cardtemp);
     }
 
+
     private String getJieshouzu(String jieshouzu) {
         String[] arr = jieshouzu.split(",");
         String sum = "";
-        for (int i = 0; i < arr.length; i++) {
-            String a = Integer.toHexString(valueOf(arr[i]));
+        for (String anArr : arr) {
+            String a = Integer.toHexString(valueOf(anArr));
             for (int j = a.length(); j < 8; j++) {
                 a = "0" + a;
             }
@@ -850,4 +965,52 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         return sum;
     }
 
+
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String state = intent.getAction();
+            byte[] cardtemp;
+            if ( //state.equals(START_SCAN_ACTION_F4) || state.equals(START_SCAN_ACTION_F5) ||
+                    state.equals(LONGPRESSED_F4) || state.equals(LONGPRESSED_F5)) { //假设是start和stop来控制开始和结束
+                //目前监听了F4和F5的按下广播和长按广播,先以长按广播为主。
+                if (!use) {
+                    return;
+                }
+                Log.d("test", "cansal button ---> down");
+                btnSpeaker.setBackgroundResource(R.drawable.speakeron);
+                animation.stop();
+                animation.setOneShot(false);
+                animation.start(); //启动
+                if (channelNumber < 8) { //数字信道语音发送开始
+                    cardtemp = cmds.voiceCall("01", "04ffffff");
+                    IDDev.WriteSerialByte(IDFd, cardtemp);
+//                        speakerApi.finishSpeak(true);
+                } else { //模拟信道语音发送开始
+                    cardtemp = cmds.voiceCall("01", "00000000");
+                    IDDev.WriteSerialByte(IDFd, cardtemp);
+//                        speakerApi.finishSpeak(false);
+                }
+
+            } else if (state.equals(STOP_SCAN_ACTION_F4) || state.equals(STOP_SCAN_ACTION_F5)) { //监听了F4和F5的按钮抬起广播
+
+                if (!use) {
+                    return;
+                }
+                Log.d("test", "cansal button ---> cancel");
+                btnSpeaker.setBackgroundResource(R.drawable.speakeroff);
+                animation.setOneShot(true);
+
+                if (channelNumber < 8) { //数字信道语音发送结束
+                    cardtemp = cmds.voiceCall("ff", "04ffffff");
+                    IDDev.WriteSerialByte(IDFd, cardtemp);
+//                        speakerApi.startSpeak(true);
+                } else { //模拟信道语音发送结束
+                    cardtemp = cmds.voiceCall("ff", "00000000");
+                    IDDev.WriteSerialByte(IDFd, cardtemp);
+//                        speakerApi.startSpeak(false);
+                }
+            }
+        }
+    };
 }

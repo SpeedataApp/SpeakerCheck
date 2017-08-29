@@ -21,6 +21,7 @@ public class Parts {
     public static final String CMD_0x36 = "36"; //设置数字组命令
     public static final String CMD_0x37 = "37"; //查询模拟组设置命令
     public static final String CMD_0x38 = "38"; //查询数字组设置命令
+    public static final String CMD_0x0b = "0b"; //Mic 增益配置
 
 
     //操作方式 1

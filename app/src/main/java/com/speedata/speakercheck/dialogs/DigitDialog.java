@@ -67,11 +67,14 @@ public class DigitDialog extends Dialog implements
     private EditText et4;
     private EditText et5;
     private EditText et6;
+    private EditText etMic;
 
     private Spinner gonglvSpinner;
     private Spinner lianXirenleixingSpinner;
     private Spinner jiaMikaiguanSpinner;
     private Spinner seMaSpinner;
+
+    private String micset; //mic增益值
 
 
     public void onCreate(Bundle savedInstanceState) {
@@ -98,6 +101,7 @@ public class DigitDialog extends Dialog implements
         initView();
         channelLast = "00";
         channel = mainActivity.channelRemember;
+        micset = mainActivity.micGain;
 
 
         ArrayAdapter<String> gonglvAdapter = new ArrayAdapter<String>(mainActivity,
@@ -270,6 +274,9 @@ public class DigitDialog extends Dialog implements
         et4 = (EditText) this.findViewById(R.id.et_4); //联系人号码
         et5 = (EditText) this.findViewById(R.id.et_5); //密钥
         et6 = (EditText) this.findViewById(R.id.et_6); //接收组列表
+        etMic = (EditText) this.findViewById(R.id.et_mic); //设置
+
+
 
 
         et1.setText("420000000");
@@ -278,6 +285,7 @@ public class DigitDialog extends Dialog implements
         et4.setText("1");
         et5.setText("8");
         et6.setText("1");
+        etMic.setText(micset);
 
     }
 
@@ -297,9 +305,18 @@ public class DigitDialog extends Dialog implements
             String lianxiren = et4.getText().toString();
             String miyao = et5.getText().toString();
             String jieshouzu = et6.getText().toString();
+            String mic = etMic.getText().toString();
 
             int e3 = Integer.parseInt(benjiid);
             int e4 = Integer.parseInt(lianxiren);
+            int eM;
+            if ("".equals(mic)) {
+                eM = 12;
+            } else {
+                eM = Integer.parseInt(mic);
+            }
+
+
 
             if (jieshou.length() != 9 || fasong.length() != 9) {
                 Toast.makeText(mainActivity, "请确认接收频率和发送频率的输入格式是否正确", Toast.LENGTH_SHORT).show();
@@ -309,6 +326,9 @@ public class DigitDialog extends Dialog implements
                 return;
             } else if (e4 < 1 || e4 > 16776415) {
                 Toast.makeText(mainActivity, "联系人号码的范围是:1-16776415", Toast.LENGTH_SHORT).show();
+                return;
+            } else if (eM < 0 || eM > 15) {
+                Toast.makeText(mainActivity, "MIC增益的范围是:0-15", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -321,6 +341,9 @@ public class DigitDialog extends Dialog implements
             String lianxiren = et4.getText().toString();
             String miyao = et5.getText().toString();
             String jieshouzu = et6.getText().toString();
+            String mic = etMic.getText().toString();
+
+
 
             jieshou = Integer.toHexString(valueOf(jieshou));
             String sum = "";
@@ -362,12 +385,28 @@ public class DigitDialog extends Dialog implements
 
 
 
+
+
             //这是设置数字组命令中的DATA部分
             String all = gonglv16 + jieshou + fasong + benjiid + seMa16 + lianXirenleixing16
                     + lianxiren + jiaMikaiguan16 + miyao + jieshouzu;
 
             cardtemp = cmds.setNumberGroupCommand(all);
             mainActivity.IDDev.WriteSerialByte(mainActivity.IDFd, cardtemp);
+
+            if ("".equals(mic)) {
+            } else {
+                micset = mic;
+                mainActivity.micGain = micset;
+                int eM = Integer.parseInt(mic);
+                if (eM < 10) {
+                    mic = "0" + eM;
+                } else if (eM > 9) {
+                    mic = getSema(eM);
+                }
+                cardtemp = cmds.micGain(mic);
+                mainActivity.IDDev.WriteSerialByte(mainActivity.IDFd, cardtemp);
+            }
 
         }
 
@@ -425,27 +464,50 @@ public class DigitDialog extends Dialog implements
 
                 et1.setText("433375000");
                 et2.setText("433375000");
+                etMic.setText(micset);
 
                 break;
             case "02":
 
                 et1.setText("437225000");
                 et2.setText("437225000");
+                etMic.setText(micset);
                 break;
             case "03":
 
                 et1.setText("431375000");
                 et2.setText("431375000");
+                etMic.setText(micset);
                 break;
             case "04":
 
                 et1.setText("436255000");
                 et2.setText("436255000");
+                etMic.setText(micset);
                 break;
             case "05":
 
                 et1.setText("439975000");
                 et2.setText("439975000");
+                etMic.setText(micset);
+                break;
+            case "06":
+
+                et1.setText("400000000");
+                et2.setText("400000000");
+                etMic.setText(micset);
+                break;
+            case "07":
+
+                et1.setText("435000000");
+                et2.setText("435000000");
+                etMic.setText(micset);
+                break;
+            case "08":
+
+                et1.setText("470000000");
+                et2.setText("470000000");
+                etMic.setText(micset);
                 break;
 
         }

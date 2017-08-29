@@ -74,6 +74,7 @@
     <string name="contact_number">联系人号码:</string>
     <string name="channel">信道:</string>
     <string name="vol">音量：</string>
+    <string name="mic_set">MIC增益</string>
     <!-- 白色 -->
 
 </resources>

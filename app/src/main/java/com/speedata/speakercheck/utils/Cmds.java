@@ -5,6 +5,7 @@ import static com.speedata.speakercheck.utils.Parts.CKSUM_BEFORE;
 import static com.speedata.speakercheck.utils.Parts.CMD_0x01;
 import static com.speedata.speakercheck.utils.Parts.CMD_0x02;
 import static com.speedata.speakercheck.utils.Parts.CMD_0x06;
+import static com.speedata.speakercheck.utils.Parts.CMD_0x0b;
 import static com.speedata.speakercheck.utils.Parts.CMD_0x13;
 import static com.speedata.speakercheck.utils.Parts.CMD_0x14;
 import static com.speedata.speakercheck.utils.Parts.CMD_0x25;
@@ -210,6 +211,19 @@ public class Cmds {
         byte[] qgsbyte = HexString2Bytes(qgs);
 
         return qgsbyte;
+
+    }
+
+    //14.Mic 增益配置
+    public byte[] micGain(String number) { //DATA: 范围 0~15,默认 12
+
+        String mg1 = HEAD_0x68 + CMD_0x0b + RW_0x01 + SRS_0x01 + CKSUM_BEFORE + "0001" + number + TAIL_0x10;
+
+        String mg = HEAD_0x68 + CMD_0x0b + RW_0x01 + SRS_0x01 + checkSum(mg1) + "0001" + number + TAIL_0x10;
+
+        byte[] mgbyte = HexString2Bytes(mg);
+
+        return mgbyte;
 
     }
 
