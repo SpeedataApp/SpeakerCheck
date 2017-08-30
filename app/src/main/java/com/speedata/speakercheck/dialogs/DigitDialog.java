@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -75,6 +76,8 @@ public class DigitDialog extends Dialog implements
     private Spinner seMaSpinner;
 
     private String micset; //mic增益值
+
+    private String TAG = "speakercheck";
 
 
     public void onCreate(Bundle savedInstanceState) {
@@ -385,15 +388,6 @@ public class DigitDialog extends Dialog implements
 
 
 
-
-
-            //这是设置数字组命令中的DATA部分
-            String all = gonglv16 + jieshou + fasong + benjiid + seMa16 + lianXirenleixing16
-                    + lianxiren + jiaMikaiguan16 + miyao + jieshouzu;
-
-            cardtemp = cmds.setNumberGroupCommand(all);
-            mainActivity.IDDev.WriteSerialByte(mainActivity.IDFd, cardtemp);
-
             if ("".equals(mic)) {
             } else {
                 micset = mic;
@@ -406,7 +400,17 @@ public class DigitDialog extends Dialog implements
                 }
                 cardtemp = cmds.micGain(mic);
                 mainActivity.IDDev.WriteSerialByte(mainActivity.IDFd, cardtemp);
+                Log.d(TAG, mic);
             }
+
+
+            //这是设置数字组命令中的DATA部分
+            String all = gonglv16 + jieshou + fasong + benjiid + seMa16 + lianXirenleixing16
+                    + lianxiren + jiaMikaiguan16 + miyao + jieshouzu;
+
+            cardtemp = cmds.setNumberGroupCommand(all);
+            mainActivity.IDDev.WriteSerialByte(mainActivity.IDFd, cardtemp);
+
 
         }
 
