@@ -10,6 +10,7 @@ import java.io.IOException;
 /**
  * Created by xu on 2017/3/21.
  * 此为对讲机的api接口,可以调用对应方法.
+ * 此方法暂时弃用
  */
 
 public class SpeakerApi {
