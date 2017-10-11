@@ -18,24 +18,49 @@ public class DeviceControl {
 		if (android.os.Build.VERSION.RELEASE.equals("5.1")){
 
 	//		if((android.os.Build.MODEL.equalsIgnoreCase("kt45q"))||(android.os.Build.MODEL.equalsIgnoreCase("kt50"))){
-	//			CtrlFile.write("-wdout93 1");//45q  50
-	//		}else if(android.os.Build.MODEL.equalsIgnoreCase("kt80")) {
-	//			CtrlFile.write("-wdout94 1");//80
-	//		} else {
-				CtrlFile.write("-wdout93 1");//临时版本
+			//			CtrlFile.write("-wdout93 1");//45q  50
+			//		}else if(android.os.Build.MODEL.equalsIgnoreCase("kt80")) {
+			//			CtrlFile.write("-wdout94 1");//80
+			//		} else {
+
+
+			try {
+				CtrlFile.write("-wmode" + "67" + " 0");   //将GPIO67设置为GPIO模式
+				CtrlFile.flush();
+				CtrlFile.write("-wdir" + "67" + " 1");        //将GPIO67设置为输出模式
+				CtrlFile.flush();
+				CtrlFile.write("-wdout" + "67" + " 1");   //上电IO口调整
+				CtrlFile.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			CtrlFile.write("-wdout93 1");//临时版本
             CtrlFile.flush();
-				CtrlFile.write("-wdout67 1");//临时版本
-            CtrlFile.flush();
+
 //			CtrlFile.write("-wdout94 1");//临时版本
 //			CtrlFile.flush();
+
 	//		}
 		}
 		else if (android.os.Build.VERSION.RELEASE.equals("4.4.2"))
-			CtrlFile.write("-wdout67 1");//临时版本
-		CtrlFile.flush();
+
 	//		CtrlFile.write("-wdout106 1");
+
+			try {
+				CtrlFile.write("-wmode" + "67" + " 0");   //将GPIO67设置为GPIO模式
+				CtrlFile.flush();
+				CtrlFile.write("-wdir" + "67" + " 1");        //将GPIO67设置为输出模式
+				CtrlFile.flush();
+				CtrlFile.write("-wdout" + "67" + " 1");   //上电IO口调整
+				CtrlFile.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
 			CtrlFile.write("-wdout93 1");
-		CtrlFile.flush();
+			CtrlFile.flush();
+
 //		CtrlFile.write("-wdout94 1");//临时版本
 //		CtrlFile.flush();
 	}
@@ -48,10 +73,11 @@ public class DeviceControl {
 	//		}else if(android.os.Build.MODEL.equalsIgnoreCase("kt80")) {
 	//			CtrlFile.write("-wdout94 0");//80
 	//		}else {
+			CtrlFile.write("-wdout67 0");//临时版本
+			CtrlFile.flush();
 				CtrlFile.write("-wdout93 0");//临时版本
             CtrlFile.flush();
-				CtrlFile.write("-wdout67 0");//临时版本
-            CtrlFile.flush();
+
 //			CtrlFile.write("-wdout94 0");//临时版本
 //			CtrlFile.flush();
 	//		}
