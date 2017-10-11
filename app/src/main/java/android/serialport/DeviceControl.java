@@ -26,8 +26,8 @@ public class DeviceControl {
             CtrlFile.flush();
 				CtrlFile.write("-wdout67 1");//临时版本
             CtrlFile.flush();
-			CtrlFile.write("-wdout94 1");//临时版本
-			CtrlFile.flush();
+//			CtrlFile.write("-wdout94 1");//临时版本
+//			CtrlFile.flush();
 	//		}
 		}
 		else if (android.os.Build.VERSION.RELEASE.equals("4.4.2"))
@@ -36,8 +36,8 @@ public class DeviceControl {
 	//		CtrlFile.write("-wdout106 1");
 			CtrlFile.write("-wdout93 1");
 		CtrlFile.flush();
-		CtrlFile.write("-wdout94 1");//临时版本
-		CtrlFile.flush();
+//		CtrlFile.write("-wdout94 1");//临时版本
+//		CtrlFile.flush();
 	}
 	
 	public void PowerOffDevice() throws IOException        //poweroff id device
@@ -52,8 +52,8 @@ public class DeviceControl {
             CtrlFile.flush();
 				CtrlFile.write("-wdout67 0");//临时版本
             CtrlFile.flush();
-			CtrlFile.write("-wdout94 0");//临时版本
-			CtrlFile.flush();
+//			CtrlFile.write("-wdout94 0");//临时版本
+//			CtrlFile.flush();
 	//		}
 		}
 		else if (android.os.Build.VERSION.RELEASE.equals("4.4.2"))
@@ -61,9 +61,9 @@ public class DeviceControl {
 		CtrlFile.flush();
 			CtrlFile.write("-wdout93 0");
 		CtrlFile.flush();
-		CtrlFile.write("-wdout94 0");//临时版本
-	//		CtrlFile.write("-wdout106 0");
-		CtrlFile.flush();
+//		CtrlFile.write("-wdout94 0");//临时版本
+//	//		CtrlFile.write("-wdout106 0");
+//		CtrlFile.flush();
 	}
 	public void DeviceClose() throws IOException        //close file
 	{
