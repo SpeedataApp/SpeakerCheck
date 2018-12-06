@@ -19,9 +19,9 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -168,7 +168,7 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
     PowerManager.WakeLock wakeLock = null;
 
     //获取电源锁，保持该服务在屏幕熄灭时仍然获取CPU时，保持运行
-    @SuppressLint("WakelockTimeout")
+    @SuppressLint({"WakelockTimeout", "InvalidWakeLockTag"})
     private void acquireWakeLock() {
         if (null == wakeLock) {
             PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
@@ -256,7 +256,8 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                     if ("44c6b5b5c0313b0d0a".equals(byteArrayToString(buf))) {
 
                         if ("01".equals(channelRemember) || "02".equals(channelRemember) || "03".equals(channelRemember) || "04".equals(channelRemember)
-                                || "05".equals(channelRemember) || "06".equals(channelRemember) || "07".equals(channelRemember) || "08".equals(channelRemember)) {
+                                || "05".equals(channelRemember) || "06".equals(channelRemember) || "07".equals(channelRemember) || "08".equals(channelRemember)
+                                || "09".equals(channelRemember) || "10".equals(channelRemember)) {
                             cpsChannel(channelRemember);
                         } else {
                             cardtemp = cmds.changeChannel(channelRemember);
@@ -875,10 +876,10 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
     private void cpsChannel(String channel) {
         switch (channel) {
             case "01":
-                setChannel("433375000", "433375000", "888", "1", "8", "1");
+                setChannel("403012500", "403012500", "888", "1", "8", "1");
                 break;
             case "02":
-                setChannel("437225000", "437225000", "888", "1", "8", "1");
+                setChannel("409912500", "409912500", "888", "1", "8", "1");
                 break;
             case "03":
                 setChannel("431375000", "431375000", "888", "1", "8", "1");
@@ -898,7 +899,12 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
             case "08":
                 setChannel("470000000", "470000000", "888", "1", "8", "1");
                 break;
-
+            case "09":
+                setChannel("403012500", "403012500", "100", "100");
+                break;
+            case "10":
+                setChannel("409912500", "409912500", "67", "67");
+                break;
             default:
                 break;
         }
