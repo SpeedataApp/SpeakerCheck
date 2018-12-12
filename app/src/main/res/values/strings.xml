@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PTT</string>
+    <string name="app_name">对讲机PTT</string>
     <string name="cmd">请输入要计算的命令</string>
 
     <string name="end">结果</string>
