@@ -53,7 +53,15 @@ public class Cmds {
     //填入0000的命令,通过此方法计算效验和后的完整指令
     private String checkSum(String input) {
         String str = Integer.toHexString(PcCheckSum(HexString2Bytes(input)));
-        return str.substring(str.length() - 4, str.length());
+        if(str.length() < 4) {
+            for (int i = 0; i < 4; i ++) {
+                str = "0" + str;
+                if (str.length() == 4){
+                    return str.substring(str.length() - 4);
+                }
+            }
+        }
+        return str.substring(str.length() - 4);
     }
 
 //-----------------------------------------------------------------------
