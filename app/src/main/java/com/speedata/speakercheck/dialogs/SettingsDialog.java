@@ -294,8 +294,8 @@ public class SettingsDialog extends Dialog implements
 		et3 = (EditText) this.findViewById(R.id.et_3); //亚音接收
 		et4 = (EditText) this.findViewById(R.id.et_4); //亚音发射
 
-		et1.setText("409750000");
-		et2.setText("409750000");
+		et1.setText("433375000");
+		et2.setText("433375000");
 		et3.setText("0");
 		et4.setText("0");
 	}

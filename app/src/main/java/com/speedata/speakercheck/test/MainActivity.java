@@ -4,8 +4,9 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.serialport.DeviceControl;
-import android.serialport.SerialPort;
+import android.serialport.DeviceControlSpd;
+import android.serialport.SerialPortSpd;
+import android.support.annotation.IntDef;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -22,6 +23,8 @@ import com.speedata.speakercheck.dialogs.SettingsDialog;
 import com.speedata.speakercheck.utils.Cmds;
 
 import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Timer;
 
 import static com.speedata.speakercheck.utils.DataConversionUtils.byteArrayToInt;
@@ -45,8 +48,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected InputMethodManager mimm = null;
     private static final String TAG = "Speaker_DEV";
     Timer timer;
-    public SerialPort IDDev;
-    private DeviceControl DevCtrl;
+    public SerialPortSpd IDDev;
+    private DeviceControlSpd DevCtrl;
     private static final String SERIALPORT_PATH = "/dev/ttyMT1";
     public int IDFd;
     public int i;
@@ -128,6 +131,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
     }
+
 
 
 
@@ -325,7 +329,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void init() {
         Log.i(TAG, "init is called");
-        IDDev = new SerialPort();
+        IDDev = new SerialPortSpd();
         try {
             IDDev.OpenSerial(SERIALPORT_PATH, 57600);
             IDFd = IDDev.getFd();
@@ -341,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } catch (InterruptedException e) {
         }
         try {
-            DevCtrl = new DeviceControl("/sys/class/misc/mtgpio/pin");
+            DevCtrl = new DeviceControlSpd("/sys/class/misc/mtgpio/pin");
             //DevCtrl.PowerOnDevice();
             Log.d(TAG, "DevCtrl is open DevCtrl = " + DevCtrl);
         } catch (IOException e) {

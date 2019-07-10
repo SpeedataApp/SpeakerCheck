@@ -17,8 +17,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
-import android.serialport.DeviceControl;
-import android.serialport.SerialPort;
+import android.serialport.DeviceControlSpd;
+import android.serialport.SerialPortSpd;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AlertDialog;
@@ -43,21 +43,33 @@ import com.speedata.speakercheck.R;
 import com.speedata.speakercheck.dialogs.DigitDialog;
 import com.speedata.speakercheck.dialogs.MoniDialog;
 import com.speedata.speakercheck.utils.Cmds;
+import com.speedata.speakercheck.utils.DataConversionUtils;
 import com.speedata.speakercheck.utils.SpeakerApi;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
+import static android.content.ContentValues.TAG;
 import static com.speedata.speakercheck.utils.DataConversionUtils.byteArrayToString;
 import static java.lang.Integer.valueOf;
 
 public class SpeakerActivity extends Activity implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
 
-    private Spinner channelSpinner; //选择信道的spinner控件
+    private TextView channelSpinner; //选择信道的spinner控件
     private String channel16; //得到的类似"00"的16位信道字符串
     private static final String TAG = "Speaker_DEV"; //测试用的TAG
-    public SerialPort IDDev; //设备控制
-    private DeviceControl DevCtrl; //GPIO控制
-    private static final String SERIALPORT_PATH = "/dev/ttyMT1"; //path
+    public SerialPortSpd IDDev; //设备控制
+    private DeviceControlSpd DevCtrl; //GPIO控制
+    //    private DeviceControlSpd DevCtrl75; //GPIO控制
+    private DeviceControlSpd DevCtrl76; //GPIO控制
+    private static final String SERIALPORT_PATH = "/dev/ttyMT0"; //path
     public int IDFd; //用于设备控制
     private ReadThread reader; //读取模块反馈的线程
     private Handler handler;
@@ -101,6 +113,7 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
     private Context context;
     //mic增益
     public String micGain = "12"; //记录数字信道的mic增益值，默认为12
+    private String[] channel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,7 +130,9 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         acquireWakeLock();
         intentFilter();
         initNot(); //常驻通知栏
-
+        int readFunction = readFunction();
+        channelSpinner.setText(channel[readFunction]);
+        changeChannel(readFunction);
     }
 
     private void initNot() {
@@ -213,7 +228,7 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
     private void init() {
 
         Log.i(TAG, "init is called");
-        IDDev = new SerialPort();
+        IDDev = new SerialPortSpd();
         try {
             IDDev.OpenSerial(SERIALPORT_PATH, 57600);
             IDFd = IDDev.getFd();
@@ -228,7 +243,9 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         } catch (InterruptedException ignored) {
         }
         try {
-            DevCtrl = new DeviceControl("/sys/class/misc/mtgpio/pin");
+//            DevCtrl = new DeviceControlSpd();
+            DevCtrl = new DeviceControlSpd(DeviceControlSpd.PowerType.NEW_MAIN, 0,12,75);
+            DevCtrl76 = new DeviceControlSpd(DeviceControlSpd.PowerType.NEW_MAIN, 76);
             //DevCtrl.PowerOnDevice();
             Log.d(TAG, "DevCtrl is open DevCtrl = " + DevCtrl);
         } catch (IOException e) {
@@ -374,50 +391,43 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         buttonUseless();
 
         //下拉列表
-        final String[] channel = getResources().getStringArray(
+        channel = getResources().getStringArray(
                 R.array.channel);
 
-        channelSpinner = (Spinner) this.findViewById(R.id.sp_channel);
+        channelSpinner = this.findViewById(R.id.sp_channel);
 
-        ArrayAdapter<String> channelAdapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_spinner_item, channel);
-        // Log.w(TAG,"WARN");
-        channelAdapter
-                .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        channelSpinner.setAdapter(channelAdapter);
-        channelSpinner
-                .setOnItemSelectedListener(new Spinner.OnItemSelectedListener() {
-                    byte[] cardtemp = null;
+//        ArrayAdapter<String> channelAdapter = new ArrayAdapter<String>(this,
+//                android.R.layout.simple_spinner_item, channel);
+//        // Log.w(TAG,"WARN");
+//        channelAdapter
+//                .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        channelSpinner.setAdapter(channelAdapter);
+//        channelSpinner
+//                .setOnItemSelectedListener(new Spinner.OnItemSelectedListener() {
+//                    byte[] cardtemp = null;
+//
+//                    @Override
+//                    public void onItemSelected(AdapterView<?> arg0, View arg1,
+//                                               int position, long id) {
+//                        arg0.setVisibility(View.VISIBLE);
+//
+//                        TextView v1 = (TextView) arg1;
+//                        v1.setTextColor(Color.WHITE); //可以随意设置自己要的颜色值
+//
+//                        int select = channelSpinner.getSelectedItemPosition();
+//                        changeChannel(select);
+////                      channelRemember = speakerApi.changeChannels(channelNumber);
+//                    }
+//
+//
+//
+//                    @Override
+//                    public void onNothingSelected(AdapterView<?> arg0) {
+//                    }
+//                });
+//
+//        channelSpinner.setSelection(0);
 
-                    @Override
-                    public void onItemSelected(AdapterView<?> arg0, View arg1,
-                                               int position, long id) {
-                        arg0.setVisibility(View.VISIBLE);
-
-                        TextView v1 = (TextView) arg1;
-                        v1.setTextColor(Color.WHITE); //可以随意设置自己要的颜色值
-
-                        int select = channelSpinner.getSelectedItemPosition();
-                        channelNumber = select;
-
-                        channel16 = getchannel(select);
-
-                        if ("01".equals(channel16) || "02".equals(channel16) || "03".equals(channel16) || "04".equals(channel16)
-                                || "05".equals(channel16) || "06".equals(channel16) || "07".equals(channel16) || "08".equals(channel16)) {
-                            cpsChannel(channel16);
-                        } else {
-                            cardtemp = cmds.changeChannel(channel16);
-                            IDDev.WriteSerialByte(IDFd, cardtemp);
-                        }
-//                      channelRemember = speakerApi.changeChannels(channelNumber);
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> arg0) {
-                    }
-                });
-
-        channelSpinner.setSelection(0);
 
         // 创建退出时的对话框，此处根据需要显示的先后顺序决定按钮应该使用Neutral、Negative或Positive
         DialogButtonOnClickListener dialogButtonOnClickListener = new DialogButtonOnClickListener();
@@ -429,6 +439,21 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                 .setPositiveButton("取消", dialogButtonOnClickListener)
                 .create();
     }
+
+    private void changeChannel(int select) {
+        channelNumber = select;
+
+        channel16 = getchannel(select);
+
+        if ("01".equals(channel16) || "02".equals(channel16) || "03".equals(channel16) || "04".equals(channel16)
+                || "05".equals(channel16) || "06".equals(channel16) || "07".equals(channel16) || "08".equals(channel16)) {
+            cpsChannel(channel16);
+        } else {
+            byte[] cardtemp = cmds.changeChannel(channel16);
+            IDDev.WriteSerialByte(IDFd, cardtemp);
+        }
+    }
+
 
     private String getchannel(int select) { //从spinner的选项,对应所需发送的命令
         switch (select) {
@@ -513,13 +538,30 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                     try {
                         //设备反馈信息接收
                         messageRev(cishu);
+//                        DevCtrl.newSetGpioOn(75);
+//                        DevCtrl.newSetGpioOn(0);
+//                        DevCtrl.newSetGpioOn(12);
+//                        DevCtrl.newSetGpioOff(76);
                         DevCtrl.PowerOnDevice();
+                        DevCtrl76.PowerOffDevice();
+
                         Log.d(TAG, "power on");
                         try {
                             Thread.currentThread();
                             Thread.sleep(100);
                         } catch (InterruptedException ignored) {
                         }
+
+//                        File DeviceName = new File(DeviceControlSpd.POWER_NEWMAIN);
+//                        //open file
+//                        BufferedWriter ctrlfile = new BufferedWriter(new FileWriter(DeviceName, false));
+//                        //将GPIO设置为高电平
+//                        ctrlfile.write("mode 75 0");
+//                        ctrlfile.flush();
+//                        ctrlfile.write("dir 75 1");
+//                        ctrlfile.flush();
+//                        ctrlfile.write("out 75 1");
+//                        ctrlfile.flush();
                     } catch (IOException e) {
                         Log.e(TAG, "open power error");
                     }
@@ -531,7 +573,12 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                     buttonUseless();
                     Log.i(TAG, "powerBtn is called off");
                     try {
+//                        DevCtrl.newSetGpioOff(0);
+//                        DevCtrl.newSetGpioOff(12);
+////                        DevCtrl.newSetGpioOff(75);
+//                        DevCtrl.newSetGpioOn(76);
                         DevCtrl.PowerOffDevice();
+                        DevCtrl76.PowerOnDevice();
                     } catch (IOException ignored) {
 
                     }
@@ -666,6 +713,8 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
             try {
                 //    DevCtrl.PowerOnDevice();
                 DevCtrl.DeviceClose();
+//                DevCtrl75.DeviceClose();
+//                DevCtrl76.DeviceClose();
             } catch (IOException e) {
                 Log.e(TAG, "close power error");
             }
@@ -726,7 +775,9 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                     animation.setOneShot(true);
                     if (channelNumber < 8) { //数字信道语音发送结束
                         cardtemp = cmds.voiceCall("ff", "04ffffff");
-                        IDDev.WriteSerialByte(IDFd, cardtemp);
+                        Log.d(TAG, "cardtemp 结束发送: " + DataConversionUtils.byteArrayToString(cardtemp));
+                        int writeSerialByte = IDDev.WriteSerialByte(IDFd, cardtemp);
+                        Log.d(TAG, "onTouch: " + writeSerialByte);
 //                        speakerApi.startSpeak(true);
                     } else { //模拟信道语音发送结束
                         cardtemp = cmds.voiceCall("ff", "00000000");
@@ -742,7 +793,9 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                     animation.start(); //启动
                     if (channelNumber < 8) { //数字信道语音发送开始
                         cardtemp = cmds.voiceCall("01", "04ffffff");
+                        Log.d(TAG, "cardtemp 开始发送: " + DataConversionUtils.byteArrayToString(cardtemp));
                         IDDev.WriteSerialByte(IDFd, cardtemp);
+
 //                        speakerApi.finishSpeak(true);
                     } else { //模拟信道语音发送开始
                         cardtemp = cmds.voiceCall("01", "00000000");
@@ -792,34 +845,34 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         Log.d("test", "cansal button ---> down" + keyCode);
         //    byte[] cardtemp = null;
-        // 判断是否按下“BACK”(返回)键
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
+        if (keyCode == KeyEvent.KEYCODE_F3) {
+            int function = readFunction();
+            channelSpinner.setText(channel[function]);
+            changeChannel(function);
+        } else if (keyCode == KeyEvent.KEYCODE_BACK) {
             // 弹出退出时的对话框
             mExitDialog.show();
             // 返回true以表示消费事件，避免按默认的方式处理“BACK”键的事件
             return true;
-//        } else if (keyCode == KeyEvent.KEYCODE_F5) {
-//            if (!use) {
-//                return true;
-//            }
-//            //btnSpeaker.dispatchTouchEvent(MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 350, 350, 0));
-//                Log.d("test", "cansal button ---> down");
-//                btnSpeaker.setBackgroundResource(R.drawable.speakeron);
-//                animation.stop();
-//                animation.setOneShot(false);
-//                animation.start(); //启动
-//                if (channelNumber < 8) { //数字信道语音发送开始
-//                    cardtemp = cmds.voiceCall("01", "04ffffff");
-//                    IDDev.WriteSerialByte(IDFd, cardtemp);
-////                        speakerApi.finishSpeak(true);
-//                } else { //模拟信道语音发送开始
-//                    cardtemp = cmds.voiceCall("01", "00000000");
-//                    IDDev.WriteSerialByte(IDFd, cardtemp);
-////                        speakerApi.finishSpeak(false);
-//                }
-//            return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    private static int readFunction() {
+        int state = 0;
+        File file = new File("/sys/class/misc/hwoper/function");
+        try {
+            FileReader fileReader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            state = Integer.parseInt(bufferedReader.readLine());
+            bufferedReader.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Log.d(TAG, "readEm55state: " + state);
+        return state;
     }
 
 
@@ -965,6 +1018,8 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                 + lianxiren + "ff" + miyao + jieshouzu;
 
         cardtemp = cmds.setNumberGroupCommand(all);
+        String byteArrayToString = DataConversionUtils.byteArrayToString(cardtemp);
+        Log.d(TAG, "setChannel: " + byteArrayToString);
         IDDev.WriteSerialByte(IDFd, cardtemp);
     }
 
@@ -977,7 +1032,7 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         String fasongyayin = et4;
 
         jieshou = Integer.toHexString(valueOf(jieshou));
-        StringBuilder sum= new StringBuilder();
+        StringBuilder sum = new StringBuilder();
         for (int i = 0; i < jieshou.length(); i = i + 2) {
             String s = jieshou.substring(jieshou.length() - (2 + i), jieshou.length() - i);
             sum.append(s);
@@ -985,7 +1040,7 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         jieshou = sum.toString();
 
         fasong = Integer.toHexString(valueOf(fasong));
-        StringBuilder sum2= new StringBuilder();
+        StringBuilder sum2 = new StringBuilder();
         for (int i = 0; i < fasong.length(); i = i + 2) {
             String s = fasong.substring(fasong.length() - (2 + i), fasong.length() - i);
             sum2.append(s);
@@ -1005,7 +1060,6 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         //这是设置模拟组命令中的DATA部分
         String all = "80" + "01" + jieshou + fasong + "01" + "01"
                 + jieshouyayin + "01" + fasongyayin;
-
 
 
         cardtemp = cmds.setSimulationGroupCommand(all);
