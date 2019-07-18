@@ -124,7 +124,7 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
         context = SpeakerActivity.this;
         setContentView(R.layout.activity_speaker);
         initTitle();
-        speakerApi = new SpeakerApi(); //对讲机api
+//        speakerApi = new SpeakerApi(); //对讲机api
         initView();
         init(); //初始化并起线程
         acquireWakeLock();

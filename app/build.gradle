@@ -29,5 +29,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     implementation files('libs/SystemProperties.jar')
     implementation 'com.github.SpeedataG:Device:1.6.7'
+    implementation 'org.greenrobot:eventbus:3.1.1'
 
 }
