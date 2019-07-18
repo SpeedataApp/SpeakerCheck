@@ -1,7 +1,7 @@
 package com.speedata.speakercheck.utils;
 
-import android.serialport.DeviceControl;
-import android.serialport.SerialPort;
+import android.serialport.DeviceControlSpd;
+import android.serialport.SerialPortSpd;
 import android.util.Log;
 
 import java.io.IOException;
@@ -17,8 +17,8 @@ public class SpeakerApi {
 
     private String channel16; //得到的类似"00"的16位信道字符串
     private static final String TAG = "Speaker_DEV"; //测试用的TAG
-    public SerialPort IDDev; //设备控制
-    private DeviceControl DevCtrl; //GPIO控制
+    public SerialPortSpd IDDev; //设备控制
+    private DeviceControlSpd DevCtrl; //GPIO控制
     private static final String SERIALPORT_PATH = "/dev/ttyMT1"; //path
     public int IDFd; //用于设备控制
     private byte[] cardtemp = null;
@@ -28,7 +28,7 @@ public class SpeakerApi {
     //初始化时打开设备控制,设备控制的文件路径
     public void openSerialPort() {
         Log.i(TAG, "id_init is called");
-        IDDev = new SerialPort();
+        IDDev = new SerialPortSpd();
         try {
             IDDev.OpenSerial(SERIALPORT_PATH, 57600);
             IDFd = IDDev.getFd();
@@ -43,7 +43,7 @@ public class SpeakerApi {
         } catch (InterruptedException e) {
         }
         try {
-            DevCtrl = new DeviceControl("/sys/class/misc/mtgpio/pin");
+            DevCtrl = new DeviceControlSpd("/sys/class/misc/mtgpio/pin");
             //DevCtrl.PowerOnDevice();
             Log.d(TAG, "DevCtrl is open DevCtrl = " + DevCtrl);
         } catch (IOException e) {

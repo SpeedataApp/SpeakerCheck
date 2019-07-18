@@ -1,5 +1,10 @@
 package com.speedata.speakercheck.utils;
 
+import android.support.annotation.IntDef;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 import static com.speedata.speakercheck.utils.DataConversionUtils.HexString2Bytes;
 import static com.speedata.speakercheck.utils.Parts.CKSUM_BEFORE;
 import static com.speedata.speakercheck.utils.Parts.CMD_0x01;
@@ -24,6 +29,7 @@ import static com.speedata.speakercheck.utils.Parts.TAIL_0x10;
  */
 
 public class Cmds {
+
 
     //计算效验和
     //对讲机效验和计算
