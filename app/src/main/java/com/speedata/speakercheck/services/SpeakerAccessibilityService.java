@@ -56,7 +56,7 @@ public class SpeakerAccessibilityService extends AccessibilityService {
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
-
+        LogUtils.d("onServiceConnected");
     }
 
 }

@@ -367,8 +367,8 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
 
         btnYayin = (Button) findViewById(R.id.btn_yayin);
         btnYayin.setOnClickListener(this);
-        setDigit = new DigitDialog(this, this);
-        setMoni = new MoniDialog(this, this);
+//        setDigit = new DigitDialog(this, this);
+//        setMoni = new MoniDialog(this, this);
 
         ToggleButton powerBtn = (ToggleButton) findViewById(R.id.toggleButton_power);
         powerBtn.setOnCheckedChangeListener(this);
@@ -659,7 +659,7 @@ public class SpeakerActivity extends Activity implements CompoundButton.OnChecke
                 } else if (channelNumber < 8 && use) {
 
                     if (!channelRemember.equals(rememberLast)) {
-                        setDigit = new DigitDialog(this, this);
+//                        setDigit = new DigitDialog(this, this);
                         rememberLast = channelRemember;
                     }
 

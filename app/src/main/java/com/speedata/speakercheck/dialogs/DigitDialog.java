@@ -15,23 +15,25 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.speedata.speakercheck.App;
 import com.speedata.speakercheck.R;
 import com.speedata.speakercheck.activity.SpeakerActivity;
 import com.speedata.speakercheck.utils.Cmds;
+import com.speedata.speakercheck.utils.SpeakerApi;
 
 import static java.lang.Integer.valueOf;
 
 public class DigitDialog extends Dialog implements
         View.OnClickListener {
 
-    private final SpeakerActivity mainActivity;
+    private final SpeakerApi speakerApi;
     private Context mContext;
 
     private Cmds cmds;
 
-    public DigitDialog(SpeakerActivity mainActivity, Context context) {
+    public DigitDialog(SpeakerApi speakerApi, Context context) {
         super(context);
-        this.mainActivity = mainActivity;
+        this.speakerApi = speakerApi;
         mContext = context;
 
         gongLv = mContext.getResources()
@@ -103,11 +105,11 @@ public class DigitDialog extends Dialog implements
 
         initView();
         channelLast = "00";
-        channel = mainActivity.channelRemember;
-        micset = mainActivity.micGain;
+        channel = speakerApi.channelRemember;
+        micset = App.micGain;
 
 
-        ArrayAdapter<String> gonglvAdapter = new ArrayAdapter<String>(mainActivity,
+        ArrayAdapter<String> gonglvAdapter = new ArrayAdapter<String>(mContext,
                 android.R.layout.simple_spinner_item, gongLv);
         gonglvAdapter
                 .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -138,7 +140,7 @@ public class DigitDialog extends Dialog implements
                 });
 
 
-        ArrayAdapter<String> lianXirenleixingAdapter = new ArrayAdapter<String>(mainActivity,
+        ArrayAdapter<String> lianXirenleixingAdapter = new ArrayAdapter<String>(mContext,
                 android.R.layout.simple_spinner_item, lianXirenleixing);
         lianXirenleixingAdapter
                 .setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -176,7 +178,7 @@ public class DigitDialog extends Dialog implements
                     }
 
                 });
-        ArrayAdapter<String> seMaAdapter = new ArrayAdapter<String>(mainActivity,
+        ArrayAdapter<String> seMaAdapter = new ArrayAdapter<String>(mContext,
                 android.R.layout.simple_spinner_item, seMa);
         // Log.w(TAG,"WARN");
         seMaAdapter
@@ -205,7 +207,7 @@ public class DigitDialog extends Dialog implements
                     }
 
                 });
-        ArrayAdapter<String> jiaMikaiguanAdapter = new ArrayAdapter<String>(mainActivity,
+        ArrayAdapter<String> jiaMikaiguanAdapter = new ArrayAdapter<String>(mContext,
                 android.R.layout.simple_spinner_item, jiaMikaiguan);
         // Log.w(TAG,"WARN");
         jiaMikaiguanAdapter
@@ -280,8 +282,6 @@ public class DigitDialog extends Dialog implements
         etMic = (EditText) this.findViewById(R.id.et_mic); //设置
 
 
-
-
         et1.setText("420000000");
         et2.setText("420000000");
         et3.setText("888");
@@ -291,7 +291,6 @@ public class DigitDialog extends Dialog implements
         etMic.setText(micset);
 
     }
-
 
 
     @Override
@@ -320,22 +319,21 @@ public class DigitDialog extends Dialog implements
             }
 
 
-
             if (jieshou.length() != 9 || fasong.length() != 9) {
-                Toast.makeText(mainActivity, "请确认接收频率和发送频率的输入格式是否正确", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "请确认接收频率和发送频率的输入格式是否正确", Toast.LENGTH_SHORT).show();
                 return;
             } else if (e3 < 1 || e3 > 16776415) {
-                Toast.makeText(mainActivity, "本机ID的范围是:1-16776415", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "本机ID的范围是:1-16776415", Toast.LENGTH_SHORT).show();
                 return;
             } else if (e4 < 1 || e4 > 16776415) {
-                Toast.makeText(mainActivity, "联系人号码的范围是:1-16776415", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "联系人号码的范围是:1-16776415", Toast.LENGTH_SHORT).show();
                 return;
             } else if (eM < 0 || eM > 15) {
-                Toast.makeText(mainActivity, "MIC增益的范围是:0-15", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "MIC增益的范围是:0-15", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            Toast.makeText(mainActivity, "检查完毕", Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, "检查完毕", Toast.LENGTH_SHORT).show();
 
         } else if (v == sureSetting) {
             String jieshou = et1.getText().toString();
@@ -345,7 +343,6 @@ public class DigitDialog extends Dialog implements
             String miyao = et5.getText().toString();
             String jieshouzu = et6.getText().toString();
             String mic = etMic.getText().toString();
-
 
 
             jieshou = Integer.toHexString(valueOf(jieshou));
@@ -387,11 +384,10 @@ public class DigitDialog extends Dialog implements
             jieshouzu = getJieshouzu(jieshouzu);
 
 
-
             if ("".equals(mic)) {
             } else {
                 micset = mic;
-                mainActivity.micGain = micset;
+                App.micGain = micset;
                 int eM = Integer.parseInt(mic);
                 if (eM < 10) {
                     mic = "0" + eM;
@@ -399,7 +395,7 @@ public class DigitDialog extends Dialog implements
                     mic = getSema(eM);
                 }
                 cardtemp = cmds.micGain(mic);
-                mainActivity.IDDev.WriteSerialByte(mainActivity.IDFd, cardtemp);
+                speakerApi.writeSerialByte(cardtemp);
                 Log.d(TAG, mic);
             }
 
@@ -409,8 +405,7 @@ public class DigitDialog extends Dialog implements
                     + lianxiren + jiaMikaiguan16 + miyao + jieshouzu;
 
             cardtemp = cmds.setNumberGroupCommand(all);
-            mainActivity.IDDev.WriteSerialByte(mainActivity.IDFd, cardtemp);
-
+            speakerApi.writeSerialByte(cardtemp);
 
         }
 

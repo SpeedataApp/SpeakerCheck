@@ -32,6 +32,8 @@ import com.speedata.speakercheck.services.SpeakerService;
  * 功能描述:TODO
  */
 public class App extends Application {
+    public static String micGain = "12";
+    public static int currentChannel;
 
     @Override
     public void onCreate() {

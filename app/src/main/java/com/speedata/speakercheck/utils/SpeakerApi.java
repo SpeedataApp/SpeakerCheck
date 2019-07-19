@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.serialport.DeviceControlSpd;
 import android.serialport.SerialPortSpd;
 import android.util.Log;
@@ -30,7 +31,7 @@ import static java.lang.Integer.valueOf;
 public class SpeakerApi {
     public String channelRemember = "01"; //记录选择的信道,上电后直接开始
     private static final String TAG = "Speaker_DEV"; //测试用的TAG
-    private static final String SERIALPORT_PATH = "/dev/ttyMT1"; //path
+    private static final String SERIALPORT_PATH = "/dev/ttyMT0"; //path
     public static SpeakerApi api;
     private static byte[] lock = new byte[0];
     public SerialPortSpd IDDev; //设备控制
@@ -58,53 +59,45 @@ public class SpeakerApi {
 
     //初始化时打开设备控制,设备控制的文件路径
     public void openSerialPort() {
-        Log.i(TAG, "id_init is called");
+        LogUtils.d("id_init is called");
         IDDev = new SerialPortSpd();
         try {
             IDDev.OpenSerial(SERIALPORT_PATH, 57600);
             IDFd = IDDev.getFd();
-            Log.i(TAG, "SerialPort is open IDFd = " + IDFd);
+            LogUtils.d("SerialPort is open IDFd = " + IDFd);
         } catch (IOException e) {
-            Log.e(TAG, "open serial error");
+            LogUtils.e("open serial error");
             return;
         }
+        SystemClock.sleep(30);
         try {
-            Thread.currentThread();
-            Thread.sleep(30);
-        } catch (InterruptedException e) {
-        }
-        try {
-            DevCtrl = new DeviceControlSpd(DeviceControlSpd.PowerType.NEW_MAIN, 0,12,75);
+            DevCtrl = new DeviceControlSpd(DeviceControlSpd.PowerType.NEW_MAIN, 0, 12, 75);
             DevCtrl76 = new DeviceControlSpd(DeviceControlSpd.PowerType.NEW_MAIN, 76);
 
             DevCtrl.PowerOnDevice();
-            DevCtrl76.PowerOnDevice();
-            Log.d(TAG, "DevCtrl is open DevCtrl = " + DevCtrl);
+            DevCtrl76.PowerOffDevice();
+            LogUtils.d("DevCtrl is open DevCtrl = " + DevCtrl);
         } catch (IOException e) {
-            Log.e(TAG, "open power error");
+            LogUtils.e(e.toString());
             return;
         }
-        try {
-            Thread.currentThread();
-            Thread.sleep(30);
-        } catch (InterruptedException e) {
-        }
+        SystemClock.sleep(30);
     }
 
     //退出程序时关闭设备控制
     public void closePorts() {
         if (IDDev != null) {
-            Log.i(TAG, "close serial port");
+            LogUtils.d("close serial port");
             IDDev.CloseSerial(IDFd);
             IDFd = 0;
         }
         if (DevCtrl != null) {
-            Log.i(TAG, "close dev power");
+            LogUtils.d("close dev power");
             try {
-                //    DevCtrl.PowerOnDevice();
-                DevCtrl.DeviceClose();
+                DevCtrl.PowerOffDevice();
+                DevCtrl76.PowerOnDevice();
             } catch (IOException e) {
-                Log.e(TAG, "close power error");
+                LogUtils.e("close power error");
             }
         }
     }
@@ -151,7 +144,15 @@ public class SpeakerApi {
     public String changeChannels(int position) { //输入的是0-15的spinner选择结果
         channel16 = getchannel(position);
         cardtemp = cmds.changeChannel(channel16);
-        IDDev.WriteSerialByte(IDFd, cardtemp);
+        if (IDDev == null) {
+            return null;
+        }
+        if ("01".equals(channel16) || "02".equals(channel16) || "03".equals(channel16) || "04".equals(channel16)
+                || "05".equals(channel16) || "06".equals(channel16) || "07".equals(channel16) || "08".equals(channel16)) {
+            cpsChannel(channel16);
+        } else {
+            IDDev.WriteSerialByte(IDFd, cardtemp);
+        }
         return channel16;
     }
 
@@ -166,52 +167,71 @@ public class SpeakerApi {
         switch (select) {
 
             case 0:
+                channelRemember = "01";
                 return "01";
 
             case 1:
+                channelRemember = "02";
                 return "02";
 
             case 2:
+                channelRemember = "03";
                 return "03";
 
             case 3:
+                channelRemember = "04";
                 return "04";
 
             case 4:
+                channelRemember = "05";
                 return "05";
 
             case 5:
+                channelRemember = "06";
                 return "06";
 
             case 6:
+                channelRemember = "07";
                 return "07";
 
             case 7:
+                channelRemember = "08";
                 return "08";
 
             case 8:
+                channelRemember = "09";
                 return "09";
 
             case 9:
+                channelRemember = "0a";
                 return "0a";
 
             case 10:
+                channelRemember = "0b";
                 return "0b";
 
             case 11:
+                channelRemember = "0c";
                 return "0c";
 
             case 12:
+                channelRemember = "0d";
                 return "0d";
 
             case 13:
+                channelRemember = "0e";
                 return "0e";
 
             case 14:
+                channelRemember = "0f";
                 return "0f";
 
             case 15:
+                channelRemember = "10";
                 return "10";
+
+            default:
+                break;
 
         }
         return "01";
@@ -246,7 +266,6 @@ public class SpeakerApi {
     }
 
 
-
     //处理对讲模块反馈的信息
     private void messageManage(byte[] buf) {
         int voice = 0;
@@ -257,7 +276,8 @@ public class SpeakerApi {
                     voice = order7631(btoi(buf[3]));
                 }
 
-                BusMessage busMessage=new BusMessage();busMessage.setCode(voice);
+                BusMessage busMessage = new BusMessage();
+                busMessage.setCode(voice);
                 EventBus.getDefault().post(voice);
 //                if (voice == 1) {
 //                    animation.stop(); //停止
@@ -293,42 +313,10 @@ public class SpeakerApi {
 
     ReadThread reader;
     Handler handler;
+
     //初始化
     @SuppressLint("HandlerLeak")
     public void init() {
-
-        Log.i(TAG, "init is called");
-        IDDev = new SerialPortSpd();
-        try {
-            IDDev.OpenSerial(SERIALPORT_PATH, 57600);
-            IDFd = IDDev.getFd();
-            Log.i(TAG, "SerialPort is open IDFd = " + IDFd);
-        } catch (IOException e) {
-            Log.e(TAG, "open serial error");
-            return;
-        }
-        try {
-            Thread.currentThread();
-            Thread.sleep(30);
-        } catch (InterruptedException ignored) {
-        }
-        try {
-            //            DevCtrl = new DeviceControlSpd();
-            DevCtrl = new DeviceControlSpd(DeviceControlSpd.PowerType.NEW_MAIN, 0,12,75);
-            DevCtrl76 = new DeviceControlSpd(DeviceControlSpd.PowerType.NEW_MAIN, 76);
-            DevCtrl.PowerOnDevice();
-            DevCtrl76.PowerOnDevice();
-            Log.d(TAG, "DevCtrl is open DevCtrl = " + DevCtrl);
-        } catch (IOException e) {
-            Log.e(TAG, "open power error");
-            return;
-        }
-        try {
-            Thread.currentThread();
-            Thread.sleep(30);
-        } catch (InterruptedException ignored) {
-        }
-        //            speakerApi.openSerialPort();
         reader = new ReadThread();
         reader.start();
 
@@ -361,6 +349,7 @@ public class SpeakerApi {
             }
         };
     }
+
     private class ReadThread extends Thread { //读取反馈的线程
         @Override
         public void run() {
@@ -435,7 +424,7 @@ public class SpeakerApi {
         return "未知错误";
     }
 
-    public  int readFunction() {
+    public int readFunction() {
         int state = 0;
         File file = new File("/sys/class/misc/hwoper/function");
         try {
@@ -611,4 +600,7 @@ public class SpeakerApi {
 
     }
 
+    public void writeSerialByte(byte[] bytes) {
+        IDDev.WriteSerialByte(IDFd, bytes);
+    }
 }

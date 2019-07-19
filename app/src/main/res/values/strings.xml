@@ -75,6 +75,8 @@
     <string name="channel">信道:</string>
     <string name="vol">音量：</string>
     <string name="mic_set">MIC增益</string>
-    <!-- 白色 -->
+    <string name="acc_service_dec">对讲按键广播</string>
+
+
 
 </resources>
