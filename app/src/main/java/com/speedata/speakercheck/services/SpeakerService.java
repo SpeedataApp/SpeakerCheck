@@ -29,7 +29,7 @@ public class SpeakerService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action.equals(Constant.START_PTT)) {
+            if (Constant.START_PTT.equals(action)) {
                 LogUtils.d("收到广播");
                 if (isFirst) {
                     startSpeak();
@@ -54,9 +54,9 @@ public class SpeakerService extends Service {
         waveViewDialog.show();
 
         if (App.currentChannel < 8) { //数字信道语音发送结束
-            SpeakerApi.getIntance(SpeakerService.this).finishSpeak(false);
-        } else { //模拟信道语音发送结束
             SpeakerApi.getIntance(SpeakerService.this).finishSpeak(true);
+        } else { //模拟信道语音发送结束
+            SpeakerApi.getIntance(SpeakerService.this).finishSpeak(false);
         }
         isFirst = true;
     }
@@ -65,9 +65,9 @@ public class SpeakerService extends Service {
         waveViewDialog.dismiss();
 
         if (App.currentChannel < 8) { //数字信道语音发送结束
-            SpeakerApi.getIntance(SpeakerService.this).startSpeak(false);
-        } else { //模拟信道语音发送结束
             SpeakerApi.getIntance(SpeakerService.this).startSpeak(true);
+        } else { //模拟信道语音发送结束
+            SpeakerApi.getIntance(SpeakerService.this).startSpeak(false);
         }
         isFirst = false;
     }
@@ -98,7 +98,6 @@ public class SpeakerService extends Service {
 
     @Override
     public void onDestroy() {
-
         unregisterReceiver(receiver);
     }
 }
