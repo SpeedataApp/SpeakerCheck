@@ -37,7 +37,7 @@ import static com.speedata.speakercheck.utils.SpeakerApi.btoi;
 
 /**
  * 对讲主界面
- * Created by 张明_ on 2018/12/17.
+ * Created by 张明_ on 2019/07/17.
  * Email 741183142@qq.com
  */
 public class SpeakerMainActivity extends Activity implements
@@ -62,14 +62,14 @@ public class SpeakerMainActivity extends Activity implements
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_speaker);
         initTitle();
-        speakerApi = SpeakerApi.getIntance(this); //对讲机api
+        speakerApi = SpeakerApi.getInstance(); //对讲机api
         initView();
         buttonUse(false);
 
     }
 
     @SuppressLint("HandlerLeak")
-    Handler handler = new Handler() {
+    private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
@@ -87,7 +87,7 @@ public class SpeakerMainActivity extends Activity implements
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         //设置状态栏颜色
         window.setStatusBarColor(Color.rgb(39, 39, 37));
-        ViewGroup mContentView = (ViewGroup) findViewById(Window.ID_ANDROID_CONTENT);
+        ViewGroup mContentView =  findViewById(Window.ID_ANDROID_CONTENT);
         View mChildView = mContentView.getChildAt(0);
         if (mChildView != null) {
             //注意不是设置 ContentView 的 FitsSystemWindows, 而是设置 ContentView 的第一个子 View . 预留出系统 View 的空间.
@@ -158,6 +158,7 @@ public class SpeakerMainActivity extends Activity implements
                 speakerApi.closePorts();
                 buttonUse(false);
                 stopService(serviceIntent);
+                animation.setOneShot(true);
             }
         }
     }
@@ -168,7 +169,7 @@ public class SpeakerMainActivity extends Activity implements
         tvChannel = this.findViewById(R.id.sp_channel);
         //界面中间语音显示
         //显示接收语音的声音显示条
-        ImageView imageView = (ImageView) findViewById(R.id.image_view);
+        ImageView imageView =findViewById(R.id.image_view);
         //设置动画背景
         //其中animation_list就是上一步准备的动画描述文件的资源名
         imageView.setBackgroundResource(R.drawable.animation_list);
@@ -239,7 +240,7 @@ public class SpeakerMainActivity extends Activity implements
         switch (btoi(buf[1])) {
             case 0x06://语音呼叫，根据流程来设置反馈
                 if (btoi(buf[2]) == 0x02) {
-                    voice = speakerApi.order7631(btoi(buf[3]));
+                    voice = order7631(btoi(buf[3]));
                 }
                 if (voice == 1) {
                     animation.stop(); //停止
@@ -271,6 +272,22 @@ public class SpeakerMainActivity extends Activity implements
 
         }
 
+    }
+
+    public int order7631(int btoi) {
+        switch (btoi) {
+            //语音呼叫反馈包
+            //语音接收开始/结束串口包
+            case 0x6f: //"语音接收结束"
+                Toast.makeText(this, "语音接收结束", Toast.LENGTH_SHORT).show();
+                return 0;
+            case 0x60: //"语音接收开始"
+                Toast.makeText(this, "语音接收开始", Toast.LENGTH_SHORT).show();
+                return 1;
+            default:
+                break;
+        }
+        return 0;
     }
 
     @Override

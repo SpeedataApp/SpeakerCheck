@@ -15,7 +15,6 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.speedata.speakercheck.R;
-import com.speedata.speakercheck.activity.SpeakerActivity;
 import com.speedata.speakercheck.utils.Cmds;
 import com.speedata.speakercheck.utils.SpeakerApi;
 
@@ -114,7 +113,6 @@ public class MoniDialog extends Dialog implements
 
 
         initView();
-
 
         gonglv_adapter = new ArrayAdapter<String>(mContext,
                 android.R.layout.simple_spinner_item, gongLv);
@@ -284,6 +282,14 @@ public class MoniDialog extends Dialog implements
         gonglv_Spinner.setSelection(1);
         jingzaodengji_Spinner.setSelection(1);
 
+        setView(speakerApi.channelRemember);
+    }
+
+    private void setView(String ch) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("4").append(Integer.valueOf(ch, 16)).append("02500");
+        et1.setText(stringBuilder.toString());
+        et2.setText(stringBuilder.toString());
     }
 
     //弄好ettext们

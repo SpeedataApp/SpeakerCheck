@@ -1,5 +1,6 @@
 package com.speedata.speakercheck.dialogs;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -17,7 +18,6 @@ import android.widget.Toast;
 
 import com.speedata.speakercheck.App;
 import com.speedata.speakercheck.R;
-import com.speedata.speakercheck.activity.SpeakerActivity;
 import com.speedata.speakercheck.utils.Cmds;
 import com.speedata.speakercheck.utils.SpeakerApi;
 
@@ -61,8 +61,6 @@ public class DigitDialog extends Dialog implements
     private String lianXirenleixing16;
     private String jiaMikaiguan16;
     private String lianXirenleixing10;
-    public String channel;
-    private String channelLast;
 
     private EditText et1;
     private EditText et2;
@@ -104,8 +102,6 @@ public class DigitDialog extends Dialog implements
         sureSetting.setOnClickListener(this);
 
         initView();
-        channelLast = "00";
-        channel = speakerApi.channelRemember;
         micset = App.micGain;
 
 
@@ -242,33 +238,12 @@ public class DigitDialog extends Dialog implements
         lianXirenleixingSpinner.setSelection(1);
         jiaMikaiguanSpinner.setSelection(1);
 
-        if (!channel.equals(channelLast)) {
-            setView(channel);
-        }
+        setView(speakerApi.channelRemember);
 
     }
 
     private String getSema(int select) {
-        switch (select) {
-            case 10:
-                return "0a";
-
-            case 11:
-                return "0b";
-
-            case 12:
-                return "0c";
-
-            case 13:
-                return "0d";
-
-            case 14:
-                return "0e";
-
-            case 15:
-                return "0f";
-        }
-        return "00";
+        return String.format("%02x", select + 1);
     }
 
     //弄好ettext们
@@ -456,8 +431,8 @@ public class DigitDialog extends Dialog implements
         toast.show();
     }
 
+    @SuppressLint("SetTextI18n")
     private void setView(String ch) {
-        channelLast = ch;
         switch (ch) {
             case "01":
 
@@ -492,20 +467,20 @@ public class DigitDialog extends Dialog implements
                 break;
             case "06":
 
-                et1.setText("400000000");
-                et2.setText("400000000");
+                et1.setText("40602500");
+                et2.setText("40602500");
                 etMic.setText(micset);
                 break;
             case "07":
 
-                et1.setText("435000000");
-                et2.setText("435000000");
+                et1.setText("40702500");
+                et2.setText("40702500");
                 etMic.setText(micset);
                 break;
             case "08":
 
-                et1.setText("470000000");
-                et2.setText("470000000");
+                et1.setText("40802500");
+                et2.setText("40802500");
                 etMic.setText(micset);
                 break;
 

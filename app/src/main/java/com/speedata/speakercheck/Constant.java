@@ -28,6 +28,10 @@ package com.speedata.speakercheck;
  */
 public class Constant {
 
-    // 开始对讲
-    public static final String START_PTT="com.speedata.ptt.start";
+    public static final String START_SCAN_ACTION_F5 = "keycode.f5.down";
+    public static final String STOP_SCAN_ACTION_F5 = "keycode.f5.up";
+    public static final String START_SCAN_ACTION_F4 = "keycode.f4.down";
+    public static final String STOP_SCAN_ACTION_F4 = "keycode.f4.up";
+    public static final String LONGPRESSED_F4 = "keycode.f4.longpressed";
+    public static final String LONGPRESSED_F5 = "keycode.f5.longpressed";
 }

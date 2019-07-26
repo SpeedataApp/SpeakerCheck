@@ -1,14 +1,11 @@
 package com.speedata.speakercheck.utils;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
-import android.os.SystemClock;
 import android.serialport.DeviceControlSpd;
 import android.serialport.SerialPortSpd;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -30,7 +27,6 @@ public class SpeakerApi {
     public String channelRemember = "01"; //记录选择的信道,上电后直接开始
     private static final String TAG = "Speaker_DEV"; //测试用的TAG
     private static final String SERIALPORT_PATH = "/dev/ttyMT0"; //path
-    private static SpeakerApi api;
     private static final byte[] lock = new byte[0];
     private SerialPortSpd IDDev; //设备控制
     private int IDFd; //用于设备控制
@@ -38,21 +34,18 @@ public class SpeakerApi {
     private DeviceControlSpd DevCtrl76;
     private byte[] cardtemp = null;
     private Cmds cmds = new Cmds(); //封装了发送的命令的cmds,可用的为其中几项
-    private Context mContext;
     private Handler handler;
 
-    private SpeakerApi(Context mContext) {
-        this.mContext = mContext;
+    private SpeakerApi() {
+
     }
 
+    private static class Holder {
+        private static SpeakerApi api = new SpeakerApi();
+    }
 
-    public static SpeakerApi getIntance(Context mContext) {
-        synchronized (lock) {
-            if (api == null) {
-                api = new SpeakerApi(mContext);
-            }
-            return api;
-        }
+    public static SpeakerApi getInstance() {
+        return Holder.api;
     }
 
     //初始化时打开设备控制,设备控制的文件路径
@@ -215,22 +208,6 @@ public class SpeakerApi {
     }
 
 
-    public int order7631(int btoi) {
-        switch (btoi) {
-            //语音呼叫反馈包
-            //语音接收开始/结束串口包
-            case 0x6f: //"语音接收结束"
-                Toast.makeText(mContext, "语音接收结束", Toast.LENGTH_SHORT).show();
-                return 0;
-            case 0x60: //"语音接收开始"
-                Toast.makeText(mContext, "语音接收开始", Toast.LENGTH_SHORT).show();
-                return 1;
-            default:
-                break;
-        }
-        return 0;
-    }
-
     public static int btoi(byte a) {
         return (a < 0 ? a + 256 : a);
     }
@@ -296,19 +273,34 @@ public class SpeakerApi {
                 setChannel("439975000", "439975000", "888", "1", "8", "1");
                 break;
             case "06":
-                setChannel("400000000", "400000000", "888", "1", "8", "1");
+                setChannel("40602500", "40602500", "888", "1", "8", "1");
                 break;
             case "07":
-                setChannel("435000000", "435000000", "888", "1", "8", "1");
+                setChannel("40702500", "40702500", "888", "1", "8", "1");
                 break;
             case "08":
-                setChannel("470000000", "470000000", "888", "1", "8", "1");
+                setChannel("40802500", "40802500", "888", "1", "8", "1");
                 break;
             case "09":
-                setChannel("403012500", "403012500", "100", "100");
+                setChannel("40902500", "40902500", "100", "100");
                 break;
             case "10":
-                setChannel("409912500", "409912500", "67", "67");
+                setChannel("41002500", "41002500", "67", "67");
+                break;
+            case "11":
+                setChannel("41102500", "41102500", "67", "67");
+                break;
+            case "12":
+                setChannel("41202500", "41202500", "67", "67");
+                break;
+            case "13":
+                setChannel("41302500", "41302500", "67", "67");
+                break;
+            case "14":
+                setChannel("41402500", "41402500", "67", "67");
+                break;
+            case "15":
+                setChannel("41502500", "41502500", "67", "67");
                 break;
             default:
                 break;

@@ -15,7 +15,6 @@ import com.speedata.speakercheck.App;
 import com.speedata.speakercheck.Constant;
 import com.speedata.speakercheck.dialogs.WaveViewDialog;
 import com.speedata.speakercheck.utils.LogUtils;
-import com.speedata.speakercheck.utils.OpenAccessibilitySettingHelper;
 import com.speedata.speakercheck.utils.SpeakerApi;
 
 /**
@@ -29,8 +28,8 @@ public class SpeakerService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (Constant.START_PTT.equals(action)) {
-                LogUtils.d("收到广播");
+            if (Constant.START_SCAN_ACTION_F5.equals(action)) {
+                LogUtils.d("收到广播START_SCAN_ACTION_F5");
                 if (isFirst) {
                     startSpeak();
                 } else {
@@ -41,7 +40,7 @@ public class SpeakerService extends Service {
     };
     private WaveViewDialog waveViewDialog;
 
-    private void stopSpeak() {
+    private void startSpeak() {
         waveViewDialog = new WaveViewDialog(this);
         waveViewDialog.setCancelable(false);
         waveViewDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -54,22 +53,25 @@ public class SpeakerService extends Service {
         waveViewDialog.show();
 
         if (App.currentChannel < 8) { //数字信道语音发送结束
-            SpeakerApi.getIntance(SpeakerService.this).finishSpeak(true);
+            SpeakerApi.getInstance().startSpeak(true);
         } else { //模拟信道语音发送结束
-            SpeakerApi.getIntance(SpeakerService.this).finishSpeak(false);
-        }
-        isFirst = true;
-    }
-
-    private void startSpeak() {
-        waveViewDialog.dismiss();
-
-        if (App.currentChannel < 8) { //数字信道语音发送结束
-            SpeakerApi.getIntance(SpeakerService.this).startSpeak(true);
-        } else { //模拟信道语音发送结束
-            SpeakerApi.getIntance(SpeakerService.this).startSpeak(false);
+            SpeakerApi.getInstance().startSpeak(false);
         }
         isFirst = false;
+    }
+
+    private void stopSpeak() {
+        if (waveViewDialog != null) {
+            waveViewDialog.dismiss();
+        }
+
+
+        if (App.currentChannel < 8) { //数字信道语音发送结束
+            SpeakerApi.getInstance().finishSpeak(true);
+        } else { //模拟信道语音发送结束
+            SpeakerApi.getInstance().finishSpeak(false);
+        }
+        isFirst = true;
     }
 
     @Nullable
@@ -86,18 +88,15 @@ public class SpeakerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        IntentFilter filter = new IntentFilter(Constant.START_PTT);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Constant.START_SCAN_ACTION_F5);
+        filter.addAction(Constant.STOP_SCAN_ACTION_F5);
         registerReceiver(receiver, filter);
-        if (!OpenAccessibilitySettingHelper.isAccessibilitySettingsOn(this,
-                SpeakerAccessibilityService.class.getName())) {// 判断服务是否开启
-            OpenAccessibilitySettingHelper.jumpToSettingPage(this);// 跳转到开启页面
-        }
-
-
     }
 
     @Override
     public void onDestroy() {
         unregisterReceiver(receiver);
     }
+
 }
